@@ -30,9 +30,36 @@ export default {
     };
   },
   methods: {
-    async submitForm() {
-      // ... (keep the existing submitForm method code)
+   async submitForm() {
+  const formData = new FormData();
+  formData.append('email', this.email);
+  formData.append('interest', this.interest);
+
+  try {
+    const response = await fetch('https://formspree.io/f/mzbnakev', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json',
+      },
+    });
+    
+    if (response.ok) {
+      // Handle successful submission
+      alert('Thank you for signing up!');
+      // Reset form
+      this.email = '';
+      this.interest = '';
+    } else {
+      // Handle errors or unsuccessful submission
+      alert('Submission failed. Please try again.');
     }
+  } catch (error) {
+    console.error('Error submitting form:', error);
+    alert('An error occurred. Please try again.');
+  }
+}
+
   }
 };
 </script>
