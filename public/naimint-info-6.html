@@ -178,62 +178,66 @@
     });
   </script>
 
-<pre>
-       +--------------+
-       |   Start of   |
-       |    Epoch     |
-       +--------------+
-              |
-              v
-       +--------------+
-       |  Users post  |
-       |  and vote on |
-       |   content    |
-       +--------------+
-              |
-              v
-       +--------------+
-       |  Collect     |
-       |  posting and |
-       |  voting fees |
-       +--------------+
-              |
-              v
-       +--------------+
-       |  Calculate   |
-       |  estimated   |
-       |  recovery    |
-       +--------------+
-              |
-              v
-       +--------------+
-       |    Apply     |
-       |    burn      |
-       |  mechanism   |
-       +--------------+
-              |
-              v
-       +--------------+
-       |  Distribute  |
-       |  rewards to  |
-       |    users     |
-       +--------------+
-              |
-        +-----+-----+
-        |           |
-        v           v
-+--------------+ +--------------+
-|  Update      | |  Update      |
-|  founder's   | |  reservoir   |
-|  fund        | |  balance     |
-+--------------+ +--------------+
-        |           |
-        v           v
-       +--------------+
-       |   End of     |
-       |    Epoch     |
-       +--------------+
-</pre>
+
+<style>
+ .container {
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+ }
+ .box {
+     border: 2px solid #007BFF;
+     border-radius: 5px;
+     padding: 20px;
+     margin: 10px;
+     text-align: center;
+     background-color: #E3F2FD;
+     width: 200px;
+ }
+ .arrow {
+     margin: 0 20px;
+     height: 30px;
+     width: 2px;
+     background-color: #007BFF;
+ }
+ .split {
+     display: flex;
+     justify-content: space-around;
+     width: 100%;
+ }
+ .split .arrow {
+     height: 2px;
+     width: 100px;
+     align-self: center;
+ }
+</style>
+
+
+<div class="container">
+ <div class="box">Start of Epoch</div>
+ <div class="arrow"></div>
+ <div class="box">Users post and vote on links to content</div>
+ <div class="arrow"></div>
+ <div class="box">Collect posting and voting fees ($0.01 NAIM to vote, $0.03 NAIM to post)</div>
+ <div class="arrow"></div>
+ <div class="box">Calculate estimated recovery</div>
+ <div class="arrow"></div>
+ <div class="box">Apply burn mechanism (in future maybe)</div>
+ <div class="arrow"></div>
+ <div class="box">Distribute rewards to users</div>
+ <div class="arrow"></div>
+ <div class="split">
+     <div>
+         <div class="box">Update founder's fund</div>
+         <div class="arrow"></div>
+     </div>
+     <div>
+         <div class="box">Update reservoir balance</div>
+         <div class="arrow"></div>
+     </div>
+ </div>
+ <div class="box">End of Epoch</div>
+</div>
 
 
 
@@ -412,32 +416,33 @@
        }
    });
 
-   // Reservoir Chart
-   var reservoirCtx = document.getElementById('reservoirChart').getContext('2d');
-   var reservoirChart = new Chart(reservoirCtx, {
-       type: 'bar',
-       data: {
-           labels: ['Initial Reservoir', 'Near-term Reservoir Expected Dip Level', 'Long-term Reservoir Target'],
-           datasets: [{
-               data: [11111, 6666, 22222],
-               backgroundColor: ['#FF6384', '#77AA88', '#336688']
-           }]
-       },
-       options: {
-           responsive: true,
-           scales: {
-               yAxes: [{
-                   ticks: {
-                       beginAtZero: true
-                   }
-               }]
-           },
-           title: {
-               display: true,
-               text: 'Reservoir Balances'
-           }
-       }
-   });
+// Reservoir Chart
+var reservoirCtx = document.getElementById('reservoirChart').getContext('2d');
+var reservoirChart = new Chart(reservoirCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Initial Reservoir', 'Near-term Reservoir Expected Dip Level', 'Long-term Reservoir Target'],
+        datasets: [{
+            label: 'Reservoir Levels', // Label for the dataset
+            data: [11111, 6666, 22222],
+            backgroundColor: ['#FF6384', '#77AA88', '#336688']
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            display: true,
+            text: 'Reservoir Balances'
+        }
+    }
+});
 
    var epochRewardsCtx = document.getElementById('epochRewardsChart').getContext('2d');
 
