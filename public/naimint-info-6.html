@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NAIMINT Token</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .chart-container {
+      margin-bottom: 30px;
+    }
+    .info {
+  background-color: #f8f8f8;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.info:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NAIMINT Token</h1>
+    <p>NAIMINT is a unique token designed to incentivize user participation and reward content creators. The token economics are carefully crafted to ensure a sustainable and thriving ecosystem.</p>
+
+    <div class="chart-container">
+      <h2>Epoch Overview</h2>
+      <canvas id="epochChart"></canvas>
+    </div>
+    <div class="info">
+    <h2>Key Features</h2>
+    <ul>
+      <li>Total Supply: 88,888 NAIMINT tokens</li>
+      <li>33,333 tokens allocated for initial distribution and ICO</li>
+      <li>11,111 tokens in the reservoir to begin, with 22,222 token water-level target and reward multiplier when exceeding 22,222 target</li>
+      <li>22,222 tokens set aside for research and development, and future growth</li>
+      <li>Users earn rewards for submitting quality content and voting on posts</li>
+      <li>The reservoir target value may be modified to increase or decrease total circulatory supply and decrease or inrcease the reservoir balance line, respectively.</li>
+      <li>A portion of the fees collected from posting and voting may be burned to inspire long-term deflationary incrementations.</li>
+      <li>The founder's fund receives a small percentage of the recovery to support ongoing development</li>
+    </ul>
+  </div>
+ </div>
+
+  <script>
+    let epochs = 222;
+    let growthRate = 1.04;
+    let users = 10;
+    let postsCap = 11111;
+    let votesCap = postsCap * 10 + 1;
+    let posts = 100;
+    let votes = 1000;
+    let baseCostPerVote = 0.01;
+    let baseCostPerSubmission = 0.03;
+    let baseTotalRewardPool = 121.68;
+    let activityFactor = 0.25;
+    let founderFundPercentage = 0.011;
+    let reservoir = 11111;
+    let totalFounderFund = 0;
+    let totalCirculation = 33333;
+    let totalSupply = 88888;
+    let burnPercentage = 0.0;
+
+    var epochData = [];
+    var payoutData = [];
+    var circulationData = [];
+    var reservoirData = [];
+
+    for (let epoch = 1; epoch <= epochs; epoch++) {
+      let adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
+
+      posts = Math.min(posts * growthRate, postsCap);
+      votes = Math.min(votes * growthRate, votesCap);
+
+      let costPerVote = baseCostPerVote * adjustedActivityFactor;
+      let costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
+
+      let excessPercentage = reservoir > 22222 ? (reservoir - 22222) / 22222 * 44.4 : 0;
+      let totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
+
+      let recoveryVotes = votes * costPerVote;
+      let recoveryPosts = posts * costPerSubmission;
+      let estimatedRecovery = recoveryVotes + recoveryPosts;
+
+      let burnAmount = estimatedRecovery * burnPercentage;
+      estimatedRecovery -= burnAmount;
+      totalSupply -= burnAmount;
+
+      let recoveryToProtocol = estimatedRecovery / 2;
+      let foundersFundContribution = recoveryToProtocol * founderFundPercentage;
+
+      totalFounderFund += foundersFundContribution;
+      totalCirculation += totalRewardPool;
+      totalCirculation -= recoveryToProtocol;
+      reservoir -= totalRewardPool;
+      reservoir += recoveryToProtocol;
+
+      epochData.push('Epoch ' + epoch);
+      payoutData.push(totalRewardPool.toFixed(2));
+      circulationData.push(totalCirculation.toFixed(2));
+      reservoirData.push(reservoir.toFixed(2));
+
+      users *= growthRate;
+      activityFactor = adjustedActivityFactor;
+    }
+
+    // Epoch Overview Chart
+    var epochCtx = document.getElementById('epochChart').getContext('2d');
+    var epochChart = new Chart(epochCtx, {
+      type: 'line',
+      data: {
+        labels: epochData,
+        datasets: [{
+          label: 'Payouts',
+          data: payoutData,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }, {
+          label: 'Total Circulation',
+          data: circulationData,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }, {
+          label: 'Reservoir Balance',
+          data: reservoirData,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            display: false
+          },
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Epoch Overview'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true
+          }
+        }
+      }
+    });
+  </script>
+
+<pre>
+       +--------------+
+       |   Start of   |
+       |    Epoch     |
+       +--------------+
+              |
+              v
+       +--------------+
+       |  Users post  |
+       |  and vote on |
+       |   content    |
+       +--------------+
+              |
+              v
+       +--------------+
+       |  Collect     |
+       |  posting and |
+       |  voting fees |
+       +--------------+
+              |
+              v
+       +--------------+
+       |  Calculate   |
+       |  estimated   |
+       |  recovery    |
+       +--------------+
+              |
+              v
+       +--------------+
+       |    Apply     |
+       |    burn      |
+       |  mechanism   |
+       +--------------+
+              |
+              v
+       +--------------+
+       |  Distribute  |
+       |  rewards to  |
+       |    users     |
+       +--------------+
+              |
+        +-----+-----+
+        |           |
+        v           v
++--------------+ +--------------+
+|  Update      | |  Update      |
+|  founder's   | |  reservoir   |
+|  fund        | |  balance     |
++--------------+ +--------------+
+        |           |
+        v           v
+       +--------------+
+       |   End of     |
+       |    Epoch     |
+       +--------------+
+</pre>
+
+
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background-color: #f4f4f4;
+      padding: 20px;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    .highlight {
+      color: #ff6600;
+      font-weight: bold;
+    }
+    footer {
+      background-color: #333;
+      color: #fff;
+      padding: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>NAIMINT Token</h1>
+  </header>
+  <div class="container">
+    <p>Imagine a world where you can discover and share amazing content while being rewarded for your contributions. That's exactly what <span class="highlight">NAIMINT token</span> aims to achieve!</p>
+
+    <p>With NAIMINT, users can easily share links to valuable content they come across on the internet. Whether it's an insightful article, a fascinating video, or a thought-provoking discussion, you can share it with the NAIMINT community and potentially earn rewards.</p>
+
+    <p>But what makes NAIMINT truly special is its unique token economics. When you share a link, other users can vote on the quality and relevance of the content. The more upvotes your shared link receives, the higher the chances of you earning NAIMINT tokens as a reward for your contribution.</p>
+
+    <p>This creates a vibrant ecosystem where users are incentivized to curate and share the best content. It's like having a community-driven content discovery platform where everyone benefits from finding and sharing valuable information.</p>
+
+    <p>But the rewards don't stop there! If you're an early adopter and vote on content that later becomes popular, you'll also receive a portion of the rewards. In fact, if the content you voted for ends up in the top 50% at the end of the epoch, your voting fee will be covered, and you'll even receive a residual reward for supporting quality content early on.</p>
+
+    <p>As the NAIMINT community grows, the value of the token increases. With a limited total supply and a portion of the tokens being burned over time, the scarcity of NAIMINT tokens adds to their value. This means that as more people join and contribute to the platform, the rewards for sharing and curating content become even more significant.</p>
+
+    <p>Moreover, the NAIMINT token ecosystem is designed to be self-sustaining. A portion of the rewards is allocated to a reservoir that supports the long-term growth and development of the platform. This ensures that NAIMINT can continue to innovate and provide value to its users for years to come.</p>
+
+    <p>In essence, NAIMINT creates a decentralized, community-driven content sharing economy where everyone can benefit from discovering, sharing, and curating valuable information. It's a platform where your contributions are recognized and rewarded, and where the collective wisdom of the community helps surface the most valuable content.</p>
+
+    <p>So, whether you're a content creator, a curious reader, or someone who loves to share interesting finds, NAIMINT provides a unique opportunity to engage with a thriving community and be rewarded for your participation. Join the NAIMINT revolution and be a part of shaping the future of content discovery and sharing!</p>
+  </div>
+  <footer>
+    &copy; 2024 NAIMINT. All rights reserved.
+  </footer>
+
+
+  <style>
+   body {
+       font-family: Arial, sans-serif;
+       margin: 0;
+       padding: 20px;
+   }
+   h1, h2 {
+       color: #333;
+   }
+   .chart-container {
+       width: 100%;
+       max-width: 600px;
+       margin-bottom: 20px;
+   }
+   .facet-list {
+       list-style-type: none;
+       padding: 0;
+   }
+   .facet-list li {
+       margin-bottom: 10px;
+   }
+   .legend {
+       margin-top: 20px;
+       padding: 10px;
+       background-color: #f5f5f5;
+   }
+   .legend-item {
+       display: flex;
+       align-items: center;
+       margin-bottom: 5px;
+   }
+   .legend-color {
+       width: 20px;
+       height: 20px;
+       margin-right: 5px;
+   }
+</style>
+</head>
+<body>
+<h1>NAIMINT Tokenomics</h1>
+
+<div class="chart-container">
+   <canvas id="tokenAllocationChart"></canvas>
+</div>
+
+<div class="chart-container">
+   <canvas id="reservoirChart"></canvas>
+</div>
+
+<div class="chart-container">
+   <canvas id="epochRewardsChart"></canvas>
+</div>
+<div class="info">
+<h2>Facets</h2>
+<ul class="facet-list">
+   <li><strong>DiamondCutFacet</strong>: Handles upgrades and manages the Diamond contract by adding, replacing, or removing facets.</li>
+   <li><strong>TokenFacet</strong>: Manages the ERC-20 token functionality, including minting, burning, transferring tokens, and token supply.</li>
+   <li><strong>EpochFacet</strong>: Controls epoch-related functionalities, such as epoch transitions and triggering actions at the start and end of each epoch.</li>
+   <li><strong>ContentFacet</strong>: Handles content-related operations, including submitting posts, retrieving post details, and managing post caps.</li>
+   <li><strong>VotingFacet</strong>: Manages the voting functionality, including casting votes, retrieving vote details, and enforcing vote caps.</li>
+   <li><strong>RewardFacet</strong>: Calculates and distributes rewards based on user contributions (posts and votes) and manages the founder's fund.</li>
+   <li><strong>ReservoirFacet</strong>: Manages the reservoir balance, updates the reservoir based on epoch mechanics, and enforces the reservoir cap.</li>
+   <li>More facets to be added, minimal set listed above for getting project ready.</li>
+</ul>
+</div>
+
+<div class="legend">
+   <h3>Legend</h3>
+   <div class="legend-item">
+       <div class="legend-color" style="background-color: #FF6384;"></div>
+       <span>Pay-ins and Reservoir together</span>
+   </div>
+   <div class="legend-item">
+       <div class="legend-color" style="background-color: #36A2EB;"></div>
+       <span>Long-term Reservoir</span>
+   </div>
+   <div class="legend-item">
+       <div class="legend-color" style="background-color: #FFCE56;"></div>
+       <span>Pay-ins exclusively</span>
+   </div>
+   <div class="legend-item">
+       <div class="legend-color" style="background-color: #4BC0C0;"></div>
+       <span>Epoch Rewards = Payouts</span>
+   </div>
+</div>
+
+<p>Tokenomics and facet design devised by Vincent S. Pulling.</p>
+
+<script>
+   // Token Allocation Chart
+   var tokenAllocationCtx = document.getElementById('tokenAllocationChart').getContext('2d');
+   var tokenAllocationChart = new Chart(tokenAllocationCtx, {
+       type: 'pie',
+       data: {
+           labels: ['Payout Reservoir [Initialized]', 'Long-term Reservoir/Circulatory Increase (22,222)', 'Circulating Supply', 'Future +  R&D Fund', 'Cold Reservoir [deplete only]'],
+           datasets: [{
+               data: [11111, 11111, 33333, 22222, 11111],
+               backgroundColor: ['#1163F8', '#00FA55', '#FFCE56', '#CC22CC', '#5531FF']
+           }]
+       },
+       options: {
+           responsive: true,
+           title: {
+               display: true,
+               text: 'Token Allocation'
+           }
+       }
+   });
+
+   // Reservoir Chart
+   var reservoirCtx = document.getElementById('reservoirChart').getContext('2d');
+   var reservoirChart = new Chart(reservoirCtx, {
+       type: 'bar',
+       data: {
+           labels: ['Initial Reservoir', 'Long-term Reservoir Target'],
+           datasets: [{
+               data: [11111, 33333],
+               backgroundColor: ['#FF6384', '#36A2EB']
+           }]
+       },
+       options: {
+           responsive: true,
+           scales: {
+               yAxes: [{
+                   ticks: {
+                       beginAtZero: true
+                   }
+               }]
+           },
+           title: {
+               display: true,
+               text: 'Reservoir Balances'
+           }
+       }
+   });
+
+   var epochRewardsCtx = document.getElementById('epochRewardsChart').getContext('2d');
+
+// Assuming we fill epochRewardData with the "Reward Pool" values from the provided table for 222 epochs
+var epochLabels = [];
+var epochRewardData = [
+    // Fill in the actual values for each epoch based on the provided table
+    31.64, 32.90, 34.22, 35.59, 37.01, 38.49, 40.03, 41.63, 43.30, 45.03, 
+    46.83, 48.70, 50.65, 52.68, 54.78, 56.98, 59.26, 61.63, 64.09, 66.65, 
+    69.32, 72.09, 74.98, 77.98, 81.09, 84.34, 87.71, 91.22, 94.87, 98.66, 
+    102.61, 106.72, 110.98, 115.42, 120.04, 121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    121.68, 121.68, 121.68, 121.68, 121.68, 
+    121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68, 121.68,
+    // This pattern repeats, add all values up to epoch 222
+];
+
+// Populate epoch labels
+for (var i = 1; i <= 222; i++) {
+    epochLabels.push('Epoch ' + i);
+}
+
+var epochRewardsChart = new Chart(epochRewardsCtx, {
+    type: 'line',
+    data: {
+        labels: epochLabels,
+        datasets: [{
+            label: 'Epoch Rewards',
+            data: epochRewardData,
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            xAxes: [{
+                ticks: {
+                    autoSkip: true,
+                    maxTicksLimit: 20
+                }
+            }],
+            yAxes: [{
+                ticks: {
+                    beginAtZero: true
+                }
+            }]
+        },
+        title: {
+            display: true,
+            text: 'Epoch Rewards (222 Epochs)'
+        }
+    }
+});
+
+</script>
+
+<canvas id="tokenomicsChart2" style="margin-bottom:3em;"></canvas>
+
+<script>
+ // Your provided script modified to generate the tokenomics chart
+ epochs = 222;
+ growthRate = 1.04;
+ users = 10;
+ postsCap = 11111;
+ votesCap = postsCap * 10 + 1;
+ posts = 100;
+ votes = 1000;
+ baseCostPerVote = 0.01;
+ baseCostPerSubmission = 0.03;
+ baseTotalRewardPool = 121.68;
+ activityFactor = 0.25;
+ founderFundPercentage = 0.011;
+ reservoir = 11111;
+ totalFounderFund = 0;
+ totalCirculation = 33333;
+ totalSupply = 88888;
+ burnPercentage = 0.0;
+
+  epochData = [];
+  payoutsData = [];
+  payInsData = [];
+
+ for (let epoch = 1; epoch <= epochs; epoch++) {
+    adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
+
+   posts = Math.min(posts * growthRate, postsCap);
+   votes = Math.min(votes * growthRate, votesCap);
+
+   let costPerVote = baseCostPerVote * adjustedActivityFactor;
+   let costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
+
+   let excessPercentage = reservoir > 33333 ? (reservoir - 33333) / 33333 * 33.3 : 0;
+   let totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
+
+   let recoveryVotes = votes * costPerVote;
+   let recoveryPosts = posts * costPerSubmission;
+   let estimatedRecovery = recoveryVotes + recoveryPosts;
+
+   let burnAmount = estimatedRecovery * burnPercentage;
+   estimatedRecovery -= burnAmount;
+   totalSupply -= burnAmount;
+
+   let recoveryToProtocol = estimatedRecovery / 2;
+   let foundersFundContribution = recoveryToProtocol * founderFundPercentage;
+
+   totalFounderFund += foundersFundContribution;
+   totalCirculation += totalRewardPool;
+   totalCirculation -= recoveryToProtocol;
+   reservoir -= totalRewardPool;
+   reservoir += recoveryToProtocol;
+
+   epochData.push('Epoch ' + epoch);
+   payoutsData.push(totalRewardPool.toFixed(2));
+   payInsData.push(estimatedRecovery.toFixed(2));
+
+   users *= growthRate;
+   activityFactor = adjustedActivityFactor;
+ }
+
+ // Create the chart
+ var tokenomicsCtx2 = document.getElementById('tokenomicsChart2').getContext('2d');
+ var tokenomicsChart2 = new Chart(tokenomicsCtx2, {
+   type: 'line',
+   data: {
+     labels: epochData,
+     datasets: [{
+       label: 'Payouts',
+       data: payoutsData,
+       backgroundColor: 'rgba(75, 192, 192, 0.2)',
+       borderColor: 'rgba(75, 192, 192, 1)',
+       borderWidth: 1
+     }, {
+       label: 'Pay-ins',
+       data: payInsData,
+       backgroundColor: 'rgba(255, 99, 132, 0.2)',
+       borderColor: 'rgba(255, 99, 132, 1)',
+       borderWidth: 1
+     }]
+   },
+   options: {
+     responsive: true,
+     scales: {
+       x: {
+         display: false
+       },
+       y: {
+         beginAtZero: true
+       }
+     },
+     plugins: {
+       legend: {
+         position: 'top',
+       },
+       title: {
+         display: true,
+         text: 'Tokenomics Chart for NAIMINT:: Pay-ins Vs. Pay-outs over first 222 epochs'
+       },
+       tooltip: {
+         mode: 'index',
+         intersect: false
+       },
+       hover: {
+         mode: 'nearest',
+         intersect: true
+       }
+     }
+   }
+ });
+</script>
+
+<div class="info">
+ The sudden hump up is a result of the reservoir breeching its target long-term value of 22,222 resulting in a multiplier applied to payouts at max activation energy for these epochs.
+</div>
+
+  <canvas id="tokenomicsChart3" width="800" height="400" style="margin-bottom:5em;"></canvas>
+
+  <script>
+    // Your provided script modified to generate the tokenomics chart
+     epochs = 222;
+     growthRate = 1.04;
+     users = 10;
+     postsCap = 11111;
+     votesCap = postsCap * 10 + 1;
+     posts = 100;
+     votes = 1000;
+     baseCostPerVote = 0.01;
+     baseCostPerSubmission = 0.03;
+     baseTotalRewardPool = 121.68;
+     activityFactor = 0.25;
+     founderFundPercentage = 0.011;
+     reservoir = 11111;
+     totalFounderFund = 0;
+     totalCirculation = 33333;
+     totalSupply = 88888;
+    burnPercentage = 0.0;
+     epochData = [];
+     reservoirData = [];
+     payoutsData = [];
+     payInsData = [];
+     circulatingSupplyData = [];
+
+    for (let epoch = 1; epoch <= epochs; epoch++) {
+      let adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
+
+      posts = Math.min(posts * growthRate, postsCap);
+      votes = Math.min(votes * growthRate, votesCap);
+
+      let costPerVote = baseCostPerVote * adjustedActivityFactor;
+      let costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
+
+      let excessPercentage = reservoir > 22222 ? (reservoir - 22222) / 22222 * 44.4 : 0;
+      let totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
+
+      let recoveryVotes = votes * costPerVote;
+      let recoveryPosts = posts * costPerSubmission;
+      let estimatedRecovery = recoveryVotes + recoveryPosts;
+
+      let burnAmount = estimatedRecovery * burnPercentage;
+      estimatedRecovery -= burnAmount;
+      totalSupply -= burnAmount;
+
+      let recoveryToProtocol = estimatedRecovery / 2;
+      let foundersFundContribution = recoveryToProtocol * founderFundPercentage;
+
+      totalFounderFund += foundersFundContribution;
+      totalCirculation += totalRewardPool;
+      totalCirculation -= recoveryToProtocol;
+      reservoir -= totalRewardPool;
+      reservoir += recoveryToProtocol;
+
+      epochData.push('Epoch ' + epoch);
+      reservoirData.push(reservoir.toFixed(2));
+      payoutsData.push(totalRewardPool.toFixed(2));
+      payInsData.push(estimatedRecovery.toFixed(2));
+      circulatingSupplyData.push(totalCirculation.toFixed(2));
+
+      users *= growthRate;
+      activityFactor = adjustedActivityFactor;
+    }
+
+    // Create the chart
+    var tokenomicsCtx3 = document.getElementById('tokenomicsChart3').getContext('2d');
+    var tokenomicsChart3 = new Chart(tokenomicsCtx3, {
+      type: 'line',
+      data: {
+        labels: epochData,
+        datasets: [{
+          label: 'Reservoir Balance',
+          data: reservoirData,
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }, {
+          label: 'Payouts',
+          data: payoutsData,
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }, {
+          label: 'Pay-ins',
+          data: payInsData,
+          backgroundColor: 'rgba(255, 205, 86, 0.2)',
+          borderColor: 'rgba(255, 205, 86, 1)',
+          borderWidth: 1
+        }, {
+          label: 'Circulating Supply',
+          data: circulatingSupplyData,
+          backgroundColor: 'rgba(54, 162, 235, 0.2)',
+          borderColor: 'rgba(54, 162, 235, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            display: false
+          },
+          y: {
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'Tokenomics Chart'
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true
+          }
+        }
+      }
+    });
+  </script>
+
+<hr style="margin-bottom:10em;">
+<div class="info">Recovery amounts and distribution amounts by epoch below:<br/> Epoch 5, 55, 111, 151</div>
+
+<canvas id="chartEpoch5" style="margin-bottom:10em;"></canvas>
+<canvas id="chartEpoch55" style="margin-bottom:10em;"></canvas>
+<canvas id="chartEpoch111" style="margin-bottom:10em;"></canvas>
+<canvas id="chartEpoch151" style="margin-bottom:10em;"></canvas>
+
+<script>
+
+ // Data for each epoch
+ var dataEpoch5 = {
+     labels: ["Posts $NAIM", "Votes $NAIM", "Estimated Recovery $NAIM"],
+     datasets: [{
+         label: 'Epoch 5 ',
+         data: [122 * 0.03, 1217 * 0.01, 4.81],
+         backgroundColor: [
+             'rgba(255, 99, 132, 0.2)',
+             'rgba(54, 162, 235, 0.2)',
+             'rgba(255, 206, 86, 0.2)',
+             'rgba(75, 192, 192, 0.2)'
+         ],
+         borderColor: [
+             'rgba(255, 99, 132, 1)',
+             'rgba(54, 162, 235, 1)',
+             'rgba(255, 206, 86, 1)',
+             'rgba(75, 192, 192, 1)'
+         ],
+         borderWidth: 1
+     }]
+ };
+ 
+ var dataEpoch55 = {
+     labels: ["Posts $NAIM", "Votes $NAIM", "Estimated Recovery"],
+     datasets: [{
+         label: 'Epoch 55 ',
+         data: [865 * 0.03, 8646 * 0.01, 112.40],
+         backgroundColor: [
+             'rgba(255, 159, 64, 0.2)',
+             'rgba(153, 102, 255, 0.2)',
+             'rgba(255, 99, 132, 0.2)',
+             'rgba(54, 162, 235, 0.2)'
+         ],
+         borderColor: [
+             'rgba(255, 159, 64, 1)',
+             'rgba(153, 102, 255, 1)',
+             'rgba(255, 99, 132, 1)',
+             'rgba(54, 162, 235, 1)'
+         ],
+         borderWidth: 1
+     }]
+ };
+ 
+ var dataEpoch111 = {
+     labels: ["Posts $NAIM", "Votes $NAIM", "Estimated Recovery $NAIM"],
+     datasets: [{
+         label: 'Epoch 111 ',
+         data: [7775 * 0.03, 77750 * 0.01, 1010.75],
+         backgroundColor: [
+             'rgba(75, 192, 192, 0.2)',
+             'rgba(255, 206, 86, 0.2)',
+             'rgba(255, 159, 64, 0.2)',
+             'rgba(153, 102, 255, 0.2)'
+         ],
+         borderColor: [
+             'rgba(75, 192, 192, 1)',
+             'rgba(255, 206, 86, 1)',
+             'rgba(255, 159, 64, 1)',
+             'rgba(153, 102, 255, 1)'
+         ],
+         borderWidth: 1
+     }]
+ };
+ 
+ var dataEpoch151 = {
+     labels: ["Posts $NAIM", "Votes $NAIM", "Estimated Recovery $NAIM"],
+     datasets: [{
+         label: 'Epoch 151 ',
+         data: [11111 * 0.03, 111111 * 0.01, 1444.44],
+         backgroundColor: [
+             'rgba(255, 99, 132, 0.2)',
+             'rgba(54, 162, 235, 0.2)',
+             'rgba(255, 206, 86, 0.2)',
+             'rgba(75, 192, 192, 0.2)'
+         ],
+         borderColor: [
+             'rgba(255, 99, 132, 1)',
+             'rgba(54, 162, 235, 1)',
+             'rgba(255, 206, 86, 1)',
+             'rgba(75, 192, 192, 1)'
+         ],
+         borderWidth: 1
+     }]
+ };
+ 
+
+
+
+        // Function to create a pie chart
+        function createChart(elementId, data) {
+            new Chart(document.getElementById(elementId), {
+                type: 'pie', // Define the chart type
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: data.datasets[0].label,
+                        data: data.datasets[0].data,
+                        backgroundColor: data.datasets[0].backgroundColor,
+                        borderColor: data.datasets[0].borderColor,
+                        borderWidth: data.datasets[0].borderWidth
+                    }]
+                },
+                options: {
+                    responsive: true, // Make the chart responsive
+                    plugins: {
+                        legend: {
+                            position: 'bottom', // Position the legend at the top
+                        }
+                    }
+                }
+            });
+        }
+
+        // Data for each epoch
+        // ... (include your dataEpoch5, dataEpoch55, dataEpoch111, dataEpoch151 as defined)
+
+        // Creating charts for each epoch
+        window.onload = function() {
+            createChart('chartEpoch5', dataEpoch5);
+            createChart('chartEpoch55', dataEpoch55);
+            createChart('chartEpoch111', dataEpoch111);
+            createChart('chartEpoch151', dataEpoch151);
+        };
+
+ </script>
+ 
+<div class="info">
+ We can see that in the first 100 epochs there will be a tendency to deplete the reservoir, but long-term the repletion rate and the payout rate equalize.
+ We can as a community vote to increase or decrease the reservoir target and modulate the payout multiplier accordingly.
+ This can result in the community being able to "vote the inflexion point of supply and demand up and down" at their whim and fancy.
+ It is unclear at this early point (21 March 2024) what sort of distributed governance shall be included.
+</div>
+</body>
+</html> 

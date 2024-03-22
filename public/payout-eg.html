@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Payout and Adjusted Pay-in Costs</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Payout and Adjusted Pay-in Costs Table</h2>
+
+<table id="payoutTable">
+    <tr>
+        <th>Rank</th>
+        <th>Payout Amount</th>
+        <!-- <th>Pay-in Cost per Vote</th> -->
+        <!-- <th>Pay-in Cost per Post</th> -->
+    </tr>
+</table>
+
+<div id="recoveryAmount"></div>
+
+<script>
+    const totalPayout = 121.68 * 0.77; // Adjusted by activation energy A=0.77
+    const numRanks = 50; // Number of top ranks
+    let factors = [];
+
+    for (let rank = 1; rank <= numRanks; rank++) {
+        let factor = Math.pow(numRanks + 1 - rank, 1.05); // Decreasing for higher ranks
+        factors.push(factor);
+    }
+    const totalFactorSum = factors.reduce((acc, factor) => acc + factor, 0);
+
+    // Calculate payouts for each rank
+    let payouts = factors.map(factor => totalPayout * (factor / totalFactorSum));
+
+    // Cost per vote should be less than what rank #50 receives
+    const costPerVote = 0.01
+    const costPerPost = costPerVote * 3; // Cost per post is 3x vote
+
+    // Calculate total recovery for the epoch assuming each user votes and makes one post
+    const estimatedNumberUsers = 216;
+    const estimatedVotes = 1000; // Example estimate
+    const estimatedPosts = 200; // Example estimate
+    const totalRecovery = (estimatedVotes * costPerVote) + (estimatedPosts * costPerPost);
+
+    let table = document.getElementById("payoutTable");
+
+    payouts.forEach((payout, index) => {
+        let row = table.insertRow(-1);
+        let rankCell = row.insertCell(0);
+        let payoutCell = row.insertCell(1);
+        // let voteCostCell = row.insertCell(2);
+        // let postCostCell = row.insertCell(3);
+        rankCell.innerHTML = index + 1;
+        payoutCell.innerHTML = payout.toFixed(4);
+        // voteCostCell.innerHTML = costPerVote.toFixed(4); // Only set for last rank
+        // postCostCell.innerHTML = costPerPost.toFixed(4); // Only set for last rank
+    });
+
+    // Display estimated recovery amount
+    document.getElementById("recoveryAmount").innerHTML = `Estimated Recovery for the Epoch: ${totalRecovery.toFixed(2)} tokens`;
+</script>
+
+
+
+</body>
+</html>

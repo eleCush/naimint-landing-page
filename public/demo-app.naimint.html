@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ethereum App Tracker</title>
+<style>
+  body { font-family: Arial, sans-serif; }
+  ul { list-style-type: none; padding: 0; }
+  li { margin: 8px 0; }
+  .submission { margin-bottom: 10px; }
+  .upclicks { cursor: pointer; color: blue; text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h2>Submit a Link</h2>
+<div class="submission">
+  <input type="text" id="titleInput" placeholder="Title" />
+  <input type="text" id="urlInput" placeholder="URL" />
+  <button onclick="submitLink()">Submit</button>
+</div>
+
+<h2>Submissions</h2>
+<ul id="submissionsList"></ul>
+
+<script>
+// Check if the local storage has entries on load and render them
+document.addEventListener('DOMContentLoaded', function() {
+  if (localStorage.getItem('submissions')) {
+    renderSubmissions();
+  }
+});
+
+function submitLink() {
+  const title = document.getElementById('titleInput').value;
+  const url = document.getElementById('urlInput').value;
+  
+  if (!title || !url) {
+    alert('Please enter both a title and a URL.');
+    return;
+  }
+
+  const newSubmission = { title, url, upclicks: 0, timestamp: new Date().toISOString() };
+  
+  // Fetch existing submissions from local storage or initialize an empty array
+  const submissions = JSON.parse(localStorage.getItem('submissions')) || [];
+  submissions.push(newSubmission);
+  
+  // Store updated submissions back to local storage
+  localStorage.setItem('submissions', JSON.stringify(submissions));
+  
+  // Clear input fields
+  document.getElementById('titleInput').value = '';
+  document.getElementById('urlInput').value = '';
+  
+  // Re-render the submissions list
+  renderSubmissions();
+}
+
+function upclick(index) {
+  const submissions = JSON.parse(localStorage.getItem('submissions'));
+  submissions[index].upclicks += 1; // Increment upclicks
+  
+  // Store updated submissions back to local storage
+  localStorage.setItem('submissions', JSON.stringify(submissions));
+  
+  // Re-render the submissions list
+  renderSubmissions();
+}
+
+function renderSubmissions() {
+  const submissionsList = document.getElementById('submissionsList');
+  submissionsList.innerHTML = ''; // Clear existing list
+  
+  // Fetch submissions from local storage
+  const submissions = JSON.parse(localStorage.getItem('submissions'));
+  
+  // Sort by upclicks
+  submissions.sort((a, b) => b.upclicks - a.upclicks);
+
+  // Create list items for each submission
+  submissions.forEach((submission, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div>
+        <strong>${submission.title}</strong> <a href="${submission.url}" target="_blank">${submission.url}</a>
+        <div>Upclicks: <span class="upclicks" onclick="upclick(${index})">${submission.upclicks}</span></div>
+        <div>Timestamp: ${new Date(submission.timestamp).toLocaleString()}</div>
+      </div>
+    `;
+    submissionsList.appendChild(li);
+  });
+}
+</script>
+
+</body>
+</html>
