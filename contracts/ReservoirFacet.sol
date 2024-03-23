@@ -19,14 +19,11 @@ contract ReservoirFacet {
         return LibDiamond.diamondStorage().reservoir;
     }
 
-    function updateReservoir(uint256 amount) external {
-        LibDiamond.enforceIsContractOwner();
-        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
 
-        if (amount > ds.reservoir) {
-            require(ds.reservoir + amount <= LONG_TERM_RESERVOIR_TARGET, "ReservoirFacet: reservoir exceeds target");
-        }
+    function updateReservoir(uint256 _amount) external {
+       require(msg.sender == address(epochFacet), "ReservoirFacet: Only EpochFacet can update reservoir");
+       require(reservoirBalance >= _amount, "ReservoirFacet: Insufficient reservoir balance");
 
-        ds.reservoir = amount;
+       reservoirBalance -= _amount;
     }
 }
