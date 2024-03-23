@@ -1,78 +1,68 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-library LibDiamond {
-    bytes32 constant DIAMOND_STORAGE_POSITION = keccak256("diamond.standard.diamond.storage");
+  library LibDiamond {
+    struct LinkSubmission {
+        address submitter;
+        string title;
+        string uri;
+        uint256 upvoteCount;
+        uint256 epoch;
+    }
 
-    struct Content {
-        address author;
-        string content;
-        uint256 voteCount;
+    struct Vote {
+        address voter;
+        uint256 linkId; // Link to the submitted link
+        uint256 epoch; // Epoch in which the vote was cast
+        uint8 dayVoted; // Day of the epoch when the vote was cast
+        //first day 0.002 NAIM reward for voting content ending up in top 50%, second day 0.001 reward, third day 0.0005 reward, fourth day no reward but still vote is remunerated as with the rest for choosing correct 50% of content top
+        // Track the epoch in which the vote was cast
     }
 
     struct DiamondStorage {
-        // Token-related storage
+        // Mapping from epoch number to lists of links and votes
+        mapping(uint256 => LinkSubmission[]) linkSubmissions; //these will be cleared clear end by FinalizeEpoch
+        mapping(uint256 => Vote[]) votes;                    // this way we will have a blank slate to start each Epoch
+
+        // Other necessary variables
+        uint256 currentEpoch;
+        uint256 reservoirBalance;
+        // Keep track of link and vote counts to manage the array sizes
+        mapping(uint256 => uint256) totalLinksPerEpoch;
+        mapping(uint256 => uint256) totalVotesPerEpoch;
+
+        // Token-related variables
         mapping(address => uint256) balances;
-        mapping(address => mapping(address => uint256)) allowances;
+        //mapping(address => mapping(address => uint256)) allowances; //allowances look goofy AF and waste space no thanks
         uint256 totalSupply;
+        
+        // Reservoir-related variables
+        uint256 mainReservoir;
+        uint256 backupReservoir1;
+        uint256 backupReservoir2;
 
-        // Epoch-related storage
-        uint256 epochId;
-        uint256 epochStartTime;
-        uint256 epochEndTime;
-
-        // Reservoir-related storage
-        uint256 reservoir;
-
-        // Content-related storage
-        uint256 postCount;
-        uint256 voteCount;
-        mapping(uint256 => Content) posts;
-        mapping(uint256 => mapping(address => bool)) hasVoted;
-
-        // Reward-related storage
-        uint256 currentEpochId;
-        uint256 rewardPool;
-        mapping(address => uint256) rewards;
-
-        //Voting-related storage
-        mapping(uint256 => mapping(address => uint256)) voteTimestamps;
-
-        // Other storage variables...
+        // Future enhancements...
     }
 
     function diamondStorage() internal pure returns (DiamondStorage storage ds) {
-        bytes32 position = DIAMOND_STORAGE_POSITION;
         assembly {
-            ds.slot := position
+            ds.slot := 0
         }
     }
-
-    event DiamondCut(IDiamondCut.FacetCut[] _diamondCut, address _init, bytes _calldata);
-
-    // Internal function to enforce that the caller is the contract owner
-    function enforceIsContractOwner() internal view {
-        require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Must be contract owner");
-    }
-
-    // Other utility functions...
-}
-
-interface IDiamondCut {
-    enum FacetCutAction {Add, Replace, Remove}
-
-    struct FacetCut {
-        address facetAddress;
-        FacetCutAction action;
-        bytes4[] functionSelectors;
-    }
-
-    function diamondCut(
-        FacetCut[] calldata _diamondCut,
-        address _init,
-        bytes calldata _calldata
-    ) external;
 }
 
 /*
 this contract helps extend the libDiamond library to respect epochs, reservoir, postCount voteCount and rewardPool */
+
+
+/*
+We define the Vote struct to store the details of each vote, including:
+  voter: The address of the voter.
+  linkId: The ID of the link being voted on.
+  timestamp: The timestamp of the vote.
+
+We update the DiamondStorage struct to include:
+  epochs: A mapping to store the Epoch structs for each epoch.
+  votes: A nested mapping to store the Vote structs for each link in each epoch. The mapping is indexed by the epoch ID and the link ID.
+  hasVoted: A nested mapping to keep track of whether a user has voted for a specific link in a given epoch.*/
+

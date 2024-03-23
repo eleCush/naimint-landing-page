@@ -103,6 +103,7 @@ contract TokenFacet is IERC20, IERC20Metadata, Context {
         _burn(account, amount);
     }
 
+    /*in case we want to burn token in the collect-vote-cost & collect-post-cost step*/
     function _burn(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: burn from the zero address");
 
@@ -117,8 +118,19 @@ contract TokenFacet is IERC20, IERC20Metadata, Context {
         emit Transfer(account, address(0), amount);
     }
 
+    /*This function mints 88,888 $NAIM, the total supply */
+    /*we may also have to initializes the reservoir to 11,111 token at this step, transferring from the total supply of 88,888*/
+    /* 11,111 cold reservoir (deplete only),
+       11,111 in the reservoir (replete/deplete can),
+       22,222 into future and R&D fund,
+       33,333 into initial circulatory supply (initial circulation),
+       11,111 into long-term circulatory increase
+       tot;
+       88,888*/
+
     function initialize() external {
         require(diamondStorage().totalSupply == 0, "TokenFacet: already initialized");
         mint(address(this), 88888 * 10**decimals());
     }
 }
+

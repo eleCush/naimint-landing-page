@@ -13,7 +13,7 @@ let activityFactor = 0.25;
 let founderFundPercentage = 0.011; // 1.1% to discretionary founder fund
 let reservoir = 33333; // Initial reservoir size
 let totalFounderFund = 0; // Running sum for the founder's fund
-let totalCirculation = 22222; // Starting total circulation including initial condition
+let totalCirculation = 33333; // Starting total circulation including initial condition
 let totalSupply = 88888; // Initial total supply
 let burnPercentage = 0.0; // Example: 3.3% of the recovered fees are burned each epoch
 
@@ -28,7 +28,7 @@ for (let epoch = 1; epoch <= epochs; epoch++) {
 
     let costPerVote = baseCostPerVote * adjustedActivityFactor;
     let costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
-    let excessPercentage = reservoir > 33333 ? (reservoir - 33333) / 33333 * 33.3 : 0;
+    let excessPercentage = reservoir > 22222 ? (reservoir - 22222) / 22222 * 44.4 : 0;
     let totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
 
     let recoveryVotes = votes * costPerVote;
@@ -39,7 +39,9 @@ for (let epoch = 1; epoch <= epochs; epoch++) {
     estimatedRecovery -= burnAmount; // Adjust the estimated recovery after burning
     totalSupply -= burnAmount; // Reduce the total supply by the burn amount
 
-    let recoveryToProtocol = estimatedRecovery / 2;
+    let epochToStartCharging, esc = 177 //we can set it up such that voting/posting is free for the first 77 epochs, if there is 4% platform growth per epoch. 
+    // the danger is in accidentally depleting the main reservoir to zero before recapturing on vote/post rake
+    let recoveryToProtocol = epoch > esc ? (estimatedRecovery / 2) : 0; 
     let foundersFundContribution = recoveryToProtocol * founderFundPercentage;
     
 
