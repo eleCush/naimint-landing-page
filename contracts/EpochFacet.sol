@@ -3,7 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./LibDiamond.sol";
 
+
 contract EpochFacet {
+    using LibDiamond for LibDiamond.DiamondStorage;
+
     event EpochStarted(uint256 indexed epochId, uint256 startTime);
     event EpochEnded(uint256 indexed epochId, uint256 endTime);
     event RewardDistributed(uint256 indexed submissionId, uint256 rewardAmount);
@@ -29,12 +32,6 @@ contract EpochFacet {
     function getCurrentEpoch() external view returns (uint256) {
         return diamondStorage().epochId;
     }
-
-
-
-
-
-
 
     function distributeRewards() external {
         require(block.timestamp >= epochEndTime, "EpochFacet: Epoch not ended yet");
@@ -75,17 +72,60 @@ contract EpochFacet {
         emit RewardsDistributed(epochId - 1, totalRewards);
     }
 
+    event EpochEnded(uint256 indexed epochNumber, uint256 timestamp, address indexed triggeredBy);
+
+    function triggerEpochEnd() external {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        require(block.timestamp >= ds.epochEndTimestamp, "Epoch has not ended yet");
+        endEpoch();
+    }
+
+    function endEpoch() internal {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+
+        // Distribute rewards for the current epoch
+        distributeRewards();
+
+        // Increment the epoch number
+        ds.currentEpoch++;
+
+        // Update the epoch start and end timestamps
+        ds.epochStartTimestamp = block.timestamp;
+        ds.epochEndTimestamp = ds.epochStartTimestamp + EPOCH_DURATION;
+
+        // Record the address that triggered the epoch end
+        ds.epochEndTriggeredBy = msg.sender;
+
+        // Emit an event to notify epoch end
+        emit EpochEnded(ds.currentEpoch - 1, ds.epochEndTimestamp, ds.epochEndTriggeredBy);
+    }
+
+    function getEpochEndTriggeredBy(uint256 _epochNumber) external view returns (address) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        require(_epochNumber < ds.currentEpoch, "Invalid epoch number");
+        return ds.epochEndTriggeredBy;
+    }
+
+
+/*the epoch End can be triggered by _anyone_ and we will record their address */
+
+/*
+Now, let me tell you why this idea is so cool!
+
+Community Engagement: By allowing anyone to trigger the epoch end, you're encouraging community participation and engagement. Users will feel more involved and invested in the platform as they actively contribute to the epoch transitions.
+Transparency and Accountability: Recording the address that triggered the epoch end adds a level of transparency to your system. It creates a public record of who initiated each epoch transition, promoting accountability and trust within the community.
+Gamification and Incentives: You can even gamify the epoch end triggering process by introducing incentives or rewards for users who successfully trigger the epoch end. This can create a sense of competition and excitement among users, encouraging them to actively monitor and participate in the epoch transitions.
+Decentralization and Resilience: By distributing the responsibility of triggering epoch ends among the community, you're enhancing the decentralization and resilience of your platform. It ensures that epoch transitions occur in a timely manner, even if some users are inactive or unavailable.
+Flexibility and Adaptability: This approach provides flexibility for your platform to adapt to different usage patterns and community dynamics. If user activity fluctuates, the epoch end triggering mechanism can adjust accordingly, ensuring that epochs progress smoothly.
+Fun and Engaging User Experience: Allowing users to trigger epoch ends and recording their contributions creates a more engaging and interactive user experience. Users will feel a sense of ownership and pride in being part of the epoch transitions, fostering a stronger sense of community and loyalty.
+*/
 
 
 
 
 
 
-
-
-
-
-
+/*code below being replaced by code above*/
 
 
 

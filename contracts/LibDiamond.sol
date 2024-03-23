@@ -25,6 +25,10 @@ pragma solidity ^0.8.0;
         uint256 baseTotalRewardPool;
         uint256 burnPercentage;
         uint256 epochDuration;
+        uint256 currentEpoch;
+        uint256 epochStartTimestamp;
+        uint256 epochEndTimestamp;
+        address epochEndTriggeredBy;
 
 
         // Mapping from epoch number to lists of links and votes
