@@ -20,6 +20,13 @@ pragma solidity ^0.8.0;
     }
 
     struct DiamondStorage {
+        uint256 baseCostPerVote;
+        uint256 baseCostPerSubmission;
+        uint256 baseTotalRewardPool;
+        uint256 burnPercentage;
+        uint256 epochDuration;
+
+
         // Mapping from epoch number to lists of links and votes
         mapping(uint256 => LinkSubmission[]) linkSubmissions; //these will be cleared clear end by FinalizeEpoch
         mapping(uint256 => Vote[]) votes;                    // this way we will have a blank slate to start each Epoch
