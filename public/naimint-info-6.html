@@ -924,5 +924,117 @@ var epochRewardsChart = new Chart(epochRewardsCtx, {
 <div class="info" style="margin-bottom:10em;">
  Sign up for updates ah at <a href="https://naimint.com/">naimint.com</a>
 </div>
+
+
+
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #epochSlider {
+            width: 100%;
+        }
+    </style>
+
+
+    <div>
+        <canvas id="pieChart"></canvas>
+    </div>
+    <input type="range" id="epochSlider" min="1" max="444" value="1" step="1">
+    <script>
+        //const epochs = 222;
+        //const growthRate = 1.04;
+         users = 10;
+        //const postsCap = 11111;
+        //const votesCap = postsCap * 10 + 1;
+         posts = 100;
+         votes = 1000;
+        //const baseCostPerVote = 0.01;
+        //const baseCostPerSubmission = 0.03;
+        //const baseTotalRewardPool = 121.68;
+         activityFactor = 0.25;
+        //const founderFundPercentage = 0.011;
+         reservoir = 33333;
+         totalFounderFund = 0;
+         totalCirculation = 33333;
+        //const totalSupply = 88888;
+        //const burnPercentage = 0.0;
+        const epochToStartCharging = 177;
+
+        const data = [];
+
+        for (let epoch = 1; epoch <= 444; epoch++) {
+            const adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
+            posts = Math.min(posts * growthRate, postsCap);
+            votes = Math.min(votes * growthRate, votesCap);
+            const costPerVote = baseCostPerVote * adjustedActivityFactor;
+            const costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
+            const excessPercentage = reservoir > 22222 ? (reservoir - 22222) / 22222 * 44.4 : 0;
+            const totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
+            const recoveryVotes = votes * costPerVote;
+            const recoveryPosts = posts * costPerSubmission;
+            const estimatedRecovery = recoveryVotes + recoveryPosts;
+            const burnAmount = estimatedRecovery * burnPercentage;
+            const recoveryToProtocol = epoch > epochToStartCharging ? (estimatedRecovery / 2) : 0;
+            const foundersFundContribution = recoveryToProtocol * founderFundPercentage;
+
+            totalFounderFund += foundersFundContribution;
+            totalCirculation += totalRewardPool;
+            totalCirculation -= recoveryToProtocol;
+            reservoir -= totalRewardPool;
+            reservoir += recoveryToProtocol;
+
+            data.push({
+                epoch,
+                reservoir,
+                totalCirculation,
+                totalFounderFund,
+            });
+
+            users *= growthRate;
+            activityFactor = adjustedActivityFactor;
+        }
+
+        const pieChartCanvas = document.getElementById('pieChart');
+        const epochSlider = document.getElementById('epochSlider');
+
+        const chart = new Chart(pieChartCanvas, {
+            type: 'pie',
+            data: {
+                labels: ['Reservoir', 'Total Circulation', 'Total Founder Fund'],
+                datasets: [{
+                    data: [data[0].reservoir, data[0].totalCirculation, data[0].totalFounderFund],
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56'],
+                }],
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: `Epoch ${data[0].epoch}`,
+                    },
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                },
+            },
+        });
+
+        epochSlider.addEventListener('input', function() {
+            const epoch = parseInt(this.value);
+            const epochData = data[epoch - 1];
+
+            chart.data.datasets[0].data = [epochData.reservoir, epochData.totalCirculation, epochData.totalFounderFund];
+            chart.options.plugins.title.text = `Epoch ${epochData.epoch}`;
+            chart.update();
+        });
+    </script>
+
 </body>
 </html> 
