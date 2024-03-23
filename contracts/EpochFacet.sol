@@ -36,7 +36,44 @@ contract EpochFacet {
 
 
 
+    function distributeRewards() external {
+        require(block.timestamp >= epochEndTime, "EpochFacet: Epoch not ended yet");
 
+        uint256 totalSubmissions = linkSubmissionFacet.getLinkSubmissionCount();
+        uint256 totalVotes = votingFacet.getTotalVoteCount();
+        uint256 averageVotes = totalVotes / totalSubmissions;
+        uint256 totalRewards = 121.68 ether; // Fixed reward amount for each epoch
+        //need to still add the mulitplyer for when reservoir amount exceeding target
+
+        uint256 eligibleSubmissions = 0;
+        for (uint256 i = 0; i < totalSubmissions; i++) {
+            LinkSubmission memory submission = linkSubmissionFacet.getLinkSubmissionByIndex(i);
+            uint256 submissionVotes = votingFacet.getVoteCount(submission.id);
+
+            if (submissionVotes > averageVotes) {
+                eligibleSubmissions++;
+            }
+        }
+
+        uint256 rewardPerSubmission = totalRewards / eligibleSubmissions;
+
+        for (uint256 i = 0; i < totalSubmissions; i++) {
+            LinkSubmission memory submission = linkSubmissionFacet.getLinkSubmissionByIndex(i);
+            uint256 submissionVotes = votingFacet.getVoteCount(submission.id);
+
+            if (submissionVotes > averageVotes) {
+                tokenFacet.mint(submission.creator, rewardPerSubmission);
+            }
+        }
+
+        reservoirFacet.updateReservoir(totalRewards);
+
+        epochId++;
+        epochStartTime = block.timestamp;
+        epochEndTime = epochStartTime + 4 days;
+
+        emit RewardsDistributed(epochId - 1, totalRewards);
+    }
 
 
 
