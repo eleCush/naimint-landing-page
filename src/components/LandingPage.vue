@@ -18,6 +18,9 @@
     <div class="wordpress-link">
       <a href="https://naimint.wordpress.com/2024/03/20/naimint-a-new-dawn-for-content-creators-and-consumers/" target="_blank">Read our introductory blog post</a>
     </div>
+    <div class="wordpress-link">
+      <a href="https://naimint.com/naimint-info-6.html" target="_blank">Read about the Naimint Tokenomics, Fixed Supply and Payout Epochs</a>
+    </div>
   </div>
 </template>
 
