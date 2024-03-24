@@ -39,7 +39,7 @@ contract Naimint {
     mapping(address => uint256) public balanceOf;
     uint256 public currentEpoch;
 
-    function mint(address account, uint256 amount) public {
+    function mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
         totalSupply += amount;
         balanceOf[account] += amount;
