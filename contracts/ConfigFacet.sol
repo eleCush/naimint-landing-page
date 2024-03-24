@@ -1,5 +1,7 @@
 /*A theoretical facet to adjust voting and posting prices*/
 
+/* we could in theory adjust many parameters, epochDuration, basePayoutForEpoch, costPerVote, costPerLinkSubmission*/
+
 / SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
