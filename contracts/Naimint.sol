@@ -19,16 +19,20 @@ contract Naimint {
     mapping(uint256 => string) public linkURIs; // LinkID => URI
     mapping(uint256 => uint256) public linkVotes; // LinkID => Vote Count
     mapping(uint256 => address[]) public linkVoters; // LinkID => Voters
+
+    mapping(uint256 => address) public linkSubmitters; // LinkID => Submitter
+
     uint256 public totalLinks;
     uint256 public totalVotes;
 
     uint256 public epochStartTime;
-    uint256 public epochEndTime = block.timestamp + 4 days; // Adjust as needed
+    uint256 public epochEndTime = block.timestamp + 4 minutes; // Adjust as needed
 
     event LinkSubmitted(uint256 indexed linkId, string title, string uri, address submitter);
     event LinkUpvoted(uint256 indexed linkId, address voter);
     event EpochEnded(uint256 indexed epochId);
     event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
     event RewardMinted(address indexed creator, uint256 amount);
     event RepaymentMinted(address indexed voter, uint256 amount);
 
@@ -41,6 +45,9 @@ contract Naimint {
     uint256 public totalSupply;
     mapping(address => uint256) public balanceOf;
     uint256 public currentEpoch;
+
+    mapping(address => mapping(address => uint256)) public allowance;
+
 
     function mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
@@ -56,6 +63,7 @@ contract Naimint {
         uint256 linkId = totalLinks++;
         linkTitles[linkId] = title;
         linkURIs[linkId] = uri;
+        linkSubmitters[linkId] = msg.sender; // Store the submitter's address
         emit LinkSubmitted(linkId, title, uri, msg.sender);
     }
 
@@ -96,9 +104,10 @@ contract Naimint {
             uint256 rewardPerSubmission = totalRewards / eligibleSubmissions;
 
             // Mint reward tokens to the link submitter
-            mint(msg.sender, rewardPerSubmission);
+            address submitter = linkSubmitters[linkId];
+            mint(submitter, rewardPerSubmission);
             totalPaidOutThisEpoch += rewardPerSubmission;
-            emit RewardMinted(msg.sender, rewardPerSubmission);
+            emit RewardMinted(submitter, rewardPerSubmission);
 
             // Repay users who upvoted the link
             address[] memory voters = linkVoters[linkId];
@@ -128,20 +137,42 @@ contract Naimint {
         totalLinks = 0;
         totalVotes = 0;
         epochStartTime = block.timestamp;
-        epochEndTime = epochStartTime + 4 days;
+        epochEndTime = epochStartTime + 4 minutes;
         currentEpoch++;
 
         //best practices: follow "checks-effects-interactions" 
         emit EpochEnded(--currentEpoch);
     }
 
+
+
+   //transfer, approve, transferFrom
+   function transfer(address recipient, uint256 amount) external {
+        require(balanceOf[msg.sender] >= amount, "Insufficient balance");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[recipient] += amount;
+        emit Transfer(msg.sender, recipient, amount);
+    }
+
+    function approve(address spender, uint256 amount) external {
+        allowance[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+    }
+    function transferFrom(address sender, address recipient, uint256 amount) external {
+        require(balanceOf[sender] >= amount, "Insufficient balance");
+        require(allowance[sender][msg.sender] >= amount, "Insufficient allowance");
+        balanceOf[sender] -= amount;
+        balanceOf[recipient] += amount;
+        allowance[sender][msg.sender] -= amount;
+        emit Transfer(sender, recipient, amount);
+    }
     
 
     //constructor
 
     constructor() {
        epochStartTime = block.timestamp;
-       epochEndTime = epochStartTime + 4 days;
+       epochEndTime = epochStartTime + 4 minutes;
        totalSupply = TOTAL_SUPPLY;
        balanceOf[address(this)] = TOTAL_SUPPLY;
 
@@ -163,7 +194,6 @@ contract Naimint {
        emergencyReservoir2 += RESERVOIR_INITIAL;
        // balanceOf[address(this)] -= FUTURE_FUND;
        // balanceOf[address(this)] -= RESERVOIR_INITIAL * 3; // Main reservoir and two emergency reservoirs
-   }  
-
-    
+   }
+   //enjoy keepin' constructor @ bottom.
 }
