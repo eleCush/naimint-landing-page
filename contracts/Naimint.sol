@@ -49,11 +49,9 @@ contract Naimint {
         emit Transfer(address(0), account, amount);
     }
 
-    function submitLink(string calldata title, string calldata uri) external {
+    function submitLink(string calldata title, string calldata uri) external payable {
         uint256 submissionFee = 0.03 ether;
-        require(balanceOf[msg.sender] >= submissionFee, "Insufficient balance for submission fee");
-        balanceOf[msg.sender] -= submissionFee;
-        //balanceOf[address(this)] += submissionFee;
+        require(msg.value >= submissionFee, "Insufficient balance for submission fee");
         reservoir += submissionFee;
         uint256 linkId = totalLinks++;
         linkTitles[linkId] = title;
@@ -61,11 +59,9 @@ contract Naimint {
         emit LinkSubmitted(linkId, title, uri, msg.sender);
     }
 
-    function upvoteLink(uint256 linkId) external {
+    function upvoteLink(uint256 linkId) external payable{
         uint256 votingFee = 0.01 ether;
-        require(balanceOf[msg.sender] >= votingFee, "Insufficient balance for voting fee");
-        balanceOf[msg.sender] -= votingFee;
-        //balanceOf[address(this)] += votingFee;
+        require(msg.value >= votingFee, "Insufficient balance for voting fee");
         reservoir += votingFee;
         linkVotes[linkId]++;
         linkVoters[linkId].push(msg.sender);
