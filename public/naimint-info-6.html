@@ -649,134 +649,141 @@ var epochRewardsChart = new Chart(epochRewardsCtx, {
  The sudden hump up is a result of the reservoir breeching its target long-term value of 22,222 resulting in a multiplier applied to payouts at max activation energy for these epochs.
 </div>
 
-  <canvas id="tokenomicsChart3" width="800" height="400" style="margin-bottom:5em;"></canvas>
+  
 
-  <script>
-    // Your provided script modified to generate the tokenomics chart
-     epochs = 222;
-     growthRate = 1.04;
-     users = 10;
-     postsCap = 11111;
-     votesCap = postsCap * 10 + 1;
-     posts = 100;
-     votes = 1000;
-     baseCostPerVote = 0.01;
-     baseCostPerSubmission = 0.03;
-     baseTotalRewardPool = 121.68;
-     activityFactor = 0.25;
-     founderFundPercentage = 0.011;
-     reservoir = 11111;
-     totalFounderFund = 0;
-     totalCirculation = 33333;
-     totalSupply = 88888;
-    burnPercentage = 0.0;
-     epochData = [];
-     reservoirData = [];
-     payoutsData = [];
-     payInsData = [];
-     circulatingSupplyData = [];
+<canvas id="tokenomicsChart3" style="margin-bottom:3em;"></canvas>
 
-    for (let epoch = 1; epoch <= epochs; epoch++) {
-      let adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
+<script>
+  epochs = 222;
+  growthRate = 1.04;
+  users = 10;
+  postsCap = 11111;
+  votesCap = postsCap * 10 + 1;
+  posts = 100;
+  votes = 1000;
+  baseCostPerVote = 0.01;
+  baseCostPerSubmission = 0.03;
+  baseTotalRewardPool = 121.68;
+  activityFactor = 0.25;
+  founderFundPercentage = 0.011;
+  reservoir = 11111;
+  totalFounderFund = 0;
+  totalCirculation = 33333;
+  totalSupply = 88888;
+  burnPercentage = 0.0;
+  LTT = 22222;
 
-      posts = Math.min(posts * growthRate, postsCap);
-      votes = Math.min(votes * growthRate, votesCap);
+  epochData = [];
+  payoutData = [];
+  circulationData = [];
+  reservoirData = [];
 
-      let costPerVote = baseCostPerVote * adjustedActivityFactor;
-      let costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
+ for (let epoch = 1; epoch <= epochs; epoch++) {
+   adjustedActivityFactor = Math.min(1, activityFactor * growthRate);
 
-      let excessPercentage = reservoir > 22222 ? (reservoir - 22222) / 22222 * 44.4 : 0;
-      let totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
+   posts = Math.min(posts * growthRate, postsCap);
+   votes = Math.min(votes * growthRate, votesCap);
 
-      let recoveryVotes = votes * costPerVote;
-      let recoveryPosts = posts * costPerSubmission;
-      let estimatedRecovery = recoveryVotes + recoveryPosts;
+   costPerVote = baseCostPerVote * adjustedActivityFactor;
+   costPerSubmission = baseCostPerSubmission * adjustedActivityFactor;
 
-      let burnAmount = estimatedRecovery * burnPercentage;
-      estimatedRecovery -= burnAmount;
-      totalSupply -= burnAmount;
+   //let excessPercentage = reservoir > 33333 ? (reservoir - 33333) / 33333 * 44.4 : 0;
+       excessPercentage = reservoir > LTT ? (reservoir - LTT) / LTT * 44.4 : 0;
+   
+   
+   totalRewardPool = Math.min((baseTotalRewardPool + baseTotalRewardPool * excessPercentage) * adjustedActivityFactor, reservoir);
 
-      let recoveryToProtocol = estimatedRecovery / 2;
-      let foundersFundContribution = recoveryToProtocol * founderFundPercentage;
+   recoveryVotes = votes * costPerVote;
+   recoveryPosts = posts * costPerSubmission;
+   estimatedRecovery = recoveryVotes + recoveryPosts;
 
-      totalFounderFund += foundersFundContribution;
-      totalCirculation += totalRewardPool;
-      totalCirculation -= recoveryToProtocol;
-      reservoir -= totalRewardPool;
-      reservoir += recoveryToProtocol;
+   burnAmount = estimatedRecovery * burnPercentage;
+   estimatedRecovery -= burnAmount;
+   totalSupply -= burnAmount;
 
-      epochData.push('Epoch ' + epoch);
-      reservoirData.push(reservoir.toFixed(2));
-      payoutsData.push(totalRewardPool.toFixed(2));
-      payInsData.push(estimatedRecovery.toFixed(2));
-      circulatingSupplyData.push(totalCirculation.toFixed(2));
+    esc = 77 //we can set it up such that voting/posting is free for the first 77 epochs, if there is 4% platform growth per epoch. 
+   // the danger is in accidentally depleting the main reservoir to zero before recapturing on vote/post rake
+    recoveryToProtocol = epoch > esc ? (estimatedRecovery / 2) : 0; 
+   
+    foundersFundContribution = recoveryToProtocol * founderFundPercentage;
 
-      users *= growthRate;
-      activityFactor = adjustedActivityFactor;
-    }
+   totalFounderFund += foundersFundContribution;
+   totalCirculation += totalRewardPool;
+   totalCirculation -= recoveryToProtocol;
+   reservoir -= totalRewardPool;
+   reservoir += recoveryToProtocol;
 
-    // Create the chart
-    var tokenomicsCtx3 = document.getElementById('tokenomicsChart3').getContext('2d');
-    var tokenomicsChart3 = new Chart(tokenomicsCtx3, {
-      type: 'line',
-      data: {
-        labels: epochData,
-        datasets: [{
-          label: 'Reservoir Balance',
-          data: reservoirData,
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1
-        }, {
-          label: 'Payouts',
-          data: payoutsData,
-          backgroundColor: 'rgba(75, 192, 192, 0.2)',
-          borderColor: 'rgba(75, 192, 192, 1)',
-          borderWidth: 1
-        }, {
-          label: 'Pay-ins',
-          data: payInsData,
-          backgroundColor: 'rgba(255, 205, 86, 0.2)',
-          borderColor: 'rgba(255, 205, 86, 1)',
-          borderWidth: 1
-        }, {
-          label: 'Circulating Supply',
-          data: circulatingSupplyData,
-          backgroundColor: 'rgba(54, 162, 235, 0.2)',
-          borderColor: 'rgba(54, 162, 235, 1)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        scales: {
-          x: {
-            display: false
-          },
-          y: {
-            beginAtZero: true
-          }
-        },
-        plugins: {
-          legend: {
-            position: 'top',
-          },
-          title: {
-            display: true,
-            text: 'Tokenomics Chart'
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false
-          },
-          hover: {
-            mode: 'nearest',
-            intersect: true
-          }
-        }
-      }
-    });
-  </script>
+   epochData.push('Epoch ' + epoch);
+   payoutData.push(totalRewardPool.toFixed(2));
+   circulationData.push(totalCirculation.toFixed(2));
+   reservoirData.push(reservoir.toFixed(2));
+
+   users *= growthRate;
+   activityFactor = adjustedActivityFactor;
+ }
+
+ // Epoch Overview Chart
+  epochCtx = document.getElementById('tokenomicsChart3').getContext('2d');
+  epochChart = new Chart(epochCtx, {
+   type: 'line',
+   data: {
+     labels: epochData,
+     datasets: [{
+       label: 'Payouts',
+       data: payoutData,
+       backgroundColor: 'rgba(75, 192, 192, 0.2)',
+       borderColor: 'rgba(75, 192, 192, 1)',
+       borderWidth: 1
+     }, {
+       label: 'Total Circulation',
+       data: circulationData,
+       backgroundColor: 'rgba(255, 99, 132, 0.2)',
+       borderColor: 'rgba(255, 99, 132, 1)',
+       borderWidth: 1
+     }, {
+       label: 'Reservoir Balance',
+       data: reservoirData,
+       backgroundColor: 'rgba(54, 162, 235, 0.2)',
+       borderColor: 'rgba(54, 162, 235, 1)',
+       borderWidth: 1
+     }]
+   },
+   options: {
+     responsive: true,
+     scales: {
+       x: {
+         display: false
+       },
+       y: {
+         beginAtZero: true
+       }
+     },
+     plugins: {
+       legend: {
+         position: 'top',
+       },
+       title: {
+         display: true,
+         text: 'Epoch Overview'
+       },
+       tooltip: {
+         mode: 'index',
+         intersect: false
+       },
+       hover: {
+         mode: 'nearest',
+         intersect: true
+       }
+     }
+   }
+ });
+</script>
+
+
+
+
+
+
 
 <hr style="margin-bottom:10em;">
 <div class="info">Recovery amounts and distribution amounts by epoch below:<br/> Epoch 5, 55, 111, 151</div>
