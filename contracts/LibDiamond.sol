@@ -9,7 +9,6 @@ pragma solidity ^0.8.0;
         uint256 upvoteCount;
         uint256 epoch;
     }
-
     struct Vote {
         address voter;
         uint256 linkId; // Link to the submitted link
@@ -17,40 +16,49 @@ pragma solidity ^0.8.0;
         uint8 dayVoted; // Day of the epoch when the vote was cast
         //first day 0.002 NAIM reward for voting content ending up in top 50%, second day 0.001 reward, third day 0.0005 reward, fourth day no reward but still vote is remunerated as with the rest for choosing correct 50% of content top
         // Track the epoch in which the vote was cast
+        //notice UINT8 not UINT256 because we can store the day (0, 1, 2, 3) in a lot less than 256 bits, but cannot choose anything less than 8.
     }
 
     struct DiamondStorage {
-        uint256 baseCostPerVote;
-        uint256 baseCostPerSubmission;
-        uint256 baseTotalRewardPool;
-        uint256 burnPercentage;
-        uint256 epochDuration;
-        uint256 currentEpoch;
-        uint256 epochStartTimestamp;
+        // Reservoir-related storage.
+        uint256 reservoirBalance;
+        //  Admin may trigger a complete one-way depletion of one of the emergency reservoirs into the main reservoir.  This is for unforseen economic downturns, internet outages, divine and or government intervetion that prevents chain synchronization for a while, and other things that might inadvertently drain the reservoir and render the token valueless.  For only extreme extreme and extreme extreme extreme emergencies.
+        uint256 emergencyReservoir1Balance;
+        uint256 emergencyReservoir2Balance;
+
+        // Epoch-related storage.
+        uint256 epochDuration; //dev 44 min, prod 4 days
+        uint256 currentEpoch;  // increments every epoch end, finalize, startnew
+        uint256 epochStartTimestamp; 
         uint256 epochEndTimestamp;
-        address epochEndTriggeredBy;
+        address epochEndTriggeredBy; // when the epoch exit conditions are met (timestamp of current block exceeds endTimestamp,) anyone can trigger the EpochEnd, this introduces a fun competition since we record who ended the epoch via their signal.  Might reward people for doing this.  Frees up a lot of logic around how to ensure the epoch ends automatically but also with some variance and human intervention to prevent, avoid, shirk, mitigate, and otherwise utterly obviate the colluded-miner-related _. // dill words are to be avoided in the source code not because of stevie wonder's song but definitely because of stevie wonder's song
+
+
+        uint256 baseCostPerVote; // to start at 0.01 $NAIM and maybe we need to adjust this but I'm thinking it'll be quite alright because payout is 121.68 every 4 days
+        uint256 baseCostPerSubmission; // to start at 0.03 $NAIM, could go down, could go up, might need to invent ways to adjust price but who cares, consistency probably deters quantity vs quality battles
+        uint256 baseTotalRewardPool; // 121.68 every epoch
+        uint256 burnPercentage; // zero.  Might have the community vote on a proposal to augment this to a positive value like 0.05 which would decrease supply.  Might time-lock the burn periods to stimulate long-term deflationary actresult.
+
+
+        /*VSP audited above this line x333xx3 */
+
+
+
 
 
         // Mapping from epoch number to lists of links and votes
-        mapping(uint256 => LinkSubmission[]) linkSubmissions; //these will be cleared clear end by FinalizeEpoch
+        mapping(uint256 => LinkSubmission[]) linkSubmissions; //these will be cleared clear end by nee FinalizeEpoch now EndEpoch 
         mapping(uint256 => Vote[]) votes;                    // this way we will have a blank slate to start each Epoch
 
-        // Other necessary variables
-        uint256 currentEpoch;
-        uint256 reservoirBalance;
+
         // Keep track of link and vote counts to manage the array sizes
         mapping(uint256 => uint256) totalLinksPerEpoch;
         mapping(uint256 => uint256) totalVotesPerEpoch;
 
         // Token-related variables
         mapping(address => uint256) balances;
-        //mapping(address => mapping(address => uint256)) allowances; //allowances look goofy AF and waste space no thanks
+        mapping(address => mapping(address => uint256)) allowances;
         uint256 totalSupply;
-        
-        // Reservoir-related variables
-        uint256 mainReservoir;
-        uint256 backupReservoir1;
-        uint256 backupReservoir2;
 
         // Future enhancements...
     }
