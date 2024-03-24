@@ -54,7 +54,7 @@ contract Naimint {
         require(balanceOf[msg.sender] >= submissionFee, "Insufficient balance for submission fee");
         balanceOf[msg.sender] -= submissionFee;
         //balanceOf[address(this)] += submissionFee;
-        reservoirBalance += submissionFee;
+        reservoir += submissionFee;
         uint256 linkId = totalLinks++;
         linkTitles[linkId] = title;
         linkURIs[linkId] = uri;
@@ -66,7 +66,7 @@ contract Naimint {
         require(balanceOf[msg.sender] >= votingFee, "Insufficient balance for voting fee");
         balanceOf[msg.sender] -= votingFee;
         //balanceOf[address(this)] += votingFee;
-        reservoirBalance += votingFee;
+        reservoir += votingFee;
         linkVotes[linkId]++;
         linkVoters[linkId].push(msg.sender);
         totalVotes++;
@@ -116,7 +116,7 @@ contract Naimint {
         }
 
         // Deduct the total rewards from the reservoir balance
-        reservoirBalance -= totalPaidOutThisEpoch; //remunerated votes + 121.68 payout minimum // will add multiplier to payout minimum when reservoir is over threshold, soon
+        reservoir -= totalPaidOutThisEpoch; //remunerated votes + 121.68 payout minimum // will add multiplier to payout minimum when reservoir is over threshold, soon
     }
     
 
