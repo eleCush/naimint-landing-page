@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "./LibDiamond.sol";
 
-contract VotingFacet {
+contract VotingFacet is IVotingFacet {
     event VoteCast(uint256 indexed epochId, address indexed voter, uint256 indexed linkId, uint256 timestamp);
 
     function voteLink(uint256 linkId) external {
@@ -29,6 +29,23 @@ contract VotingFacet {
     function getCurrentEpoch() internal view returns (uint256) {
         // Return the current epoch based on the current timestamp and epoch duration
         // ...
+    }
+
+    function getVoters(uint256 _submissionId) external view returns (address[] memory) {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        return ds.voters[_submissionId];
+    }
+
+    function getTotalVoteCount() external view override returns (uint256) {
+        // ... implementation
+    }
+
+    function getVoteCount(uint256 _submissionId) external view override returns (uint256) {
+        // ... implementation
+    }
+
+    function getVoters(uint256 _submissionId) external view override returns (address[] memory) {
+        // ... implementation
     }
 }
 /*

@@ -18,10 +18,16 @@ pragma solidity ^0.8.0;
         // Track the epoch in which the vote was cast
         //notice UINT8 not UINT256 because we can store the day (0, 1, 2, 3) in a lot less than 256 bits, but cannot choose anything less than 8.
     }
+    struct Epoch {
+     uint256 startTime;
+     uint256 endTime;
+     uint256 totalVotes;
+     Vote linkVoteCounts; //??? or somet?
+    }
 
     struct DiamondStorage {
         //to ensure only the epochFacet may call sensitive diamond functions that alter reservoir level, and so forth.
-        address epochFacet;
+        address epochFacetAddress; //I really wanted to name this just epochFacet but epochFacetAddress is easier to audit x)  the datatype gives it away thankfully
         // Reservoir-related storage.
         uint256 reservoirBalance;
         uint256 targetBalance; //target reservoir balance, get/setTargetBalance, reservoir will have a Spillover Multiplyer effect for payouts at the end of each Epoch, when the balance exceeds the target 
@@ -50,7 +56,8 @@ pragma solidity ^0.8.0;
         // Mapping from epoch number to lists of links and votes
         mapping(uint256 => LinkSubmission[]) linkSubmissions; //these will be cleared clear end by nee FinalizeEpoch now EndEpoch 
         mapping(uint256 => Vote[]) votes;                    // this way we will have a blank slate to start each Epoch
-
+        mapping(uint256 => Epoch[]) epochs;
+        mapping(uint256 => address[]) voters;
 
         // Keep track of link and vote counts to manage the array sizes
         mapping(uint256 => uint256) totalLinksPerEpoch;

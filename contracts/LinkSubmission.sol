@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./libraries/LibDiamond.sol";
+import "./LibDiamond.sol";
 
-contract ContentFacet {
+contract LinkSubmissionFacet is ILinkSubmissionFacet {
     
     event LinkSubmitted(uint256 indexed linkId, address indexed submitter);
 
@@ -34,5 +34,14 @@ Finally, the function returns the submissions array containing all the link subm
     }
 
     return submissions;
+    }
+
+
+    function getLinkSubmissionCount() external view override returns (uint256) {
+        // ... implementation
+    }
+
+    function getLinkSubmissionByIndex(uint256 _index) external view override returns (LinkSubmission memory) {
+        // ... implementation
     }
 }

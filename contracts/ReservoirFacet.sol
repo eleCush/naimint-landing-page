@@ -13,9 +13,10 @@ contract ReservoirFacet {
     event TargetReservoirBalanceUpdated(uint256 newTargetBalance);
     event EmergencyReservoirBalanceUpdated(uint256 reservoirNumber, uint256 newBalance);
 
+    /*this is to ensure only EpochFacet can modify reservoir balance after distribution of rewards.*/
     modifier onlyEpochFacet() {
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
-        require(msg.sender == address(ds.epochFacet), "ReservoirFacet: Only EpochFacet can call this function");
+        require(msg.sender == address(ds.epochFacetAddress), "ReservoirFacet: Only EpochFacet can call this function");
         _;
     }
 
@@ -38,7 +39,7 @@ contract ReservoirFacet {
     //payouts will be multiplied in subsequent rounds
     //to help "spill over" excess funds and
     //drive the level down to the target water-lewel-le-wew.
-    function deductReservoirBalance(uint256 rewardsDistributed) external {
+    function deductReservoirBalance(uint256 rewardsDistributed) external onlyEpochFacet{ //only the EpochFacet can deduct from the reservoir balance (and thus we don't have to rely only on good faith) once distributing rewards.
         onlyEpochFacet(); // only EpochFacet can invoke deductReservoirBalance.  this modifier above checks the address of the calling contract which will be set in the initialization step
         LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
         require(ds.reservoir >= rewardsDistributed, "Insufficient reservoir balance");
