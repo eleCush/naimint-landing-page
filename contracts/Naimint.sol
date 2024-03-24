@@ -7,9 +7,12 @@ contract Naimint {
     uint256 public constant ICO_FUND = 33333 * 10**18;
     uint256 public constant FUTURE_FUND = 22222 * 10**18;
     // Assuming each emergency reservoir also starts with 11111 * 10**18;
-    uint256 public reservoirBalance = RESERVOIR_INITIAL;
-    uint256 public emergencyReservoir1 = RESERVOIR_INITIAL;
-    uint256 public emergencyReservoir2 = RESERVOIR_INITIAL;
+    uint256 public reservoir = 0; //RESERVOIR_INITIAL;
+    uint256 public icoFundBalance = 0;
+    uint256 public futureFundBalance = 0;
+
+    uint256 public emergencyReservoir1 = 0; //RESERVOIR_INITIAL;
+    uint256 public emergencyReservoir2 = 0; // RESERVOIR_INITIAL;
     // ICO and Future Fund balances can be tracked similarly if needed.
 
     mapping(uint256 => string) public linkTitles; // LinkID => Title
@@ -145,9 +148,23 @@ contract Naimint {
        epochEndTime = epochStartTime + 4 days;
        totalSupply = TOTAL_SUPPLY;
        balanceOf[address(this)] = TOTAL_SUPPLY;
-       // Allocate funds to ICO, Future Fund, and reservoirs as needed
-       // For example:
-       // balanceOf[address(this)] -= ICO_FUND;
+
+       // Allocate funds to ICO, Future Fund, and reservoirs
+
+       balanceOf[address(this)] -= ICO_FUND;
+       icoFundBalance += ICO_FUND;
+
+       balanceOf[address(this)] -= FUTURE_FUND;
+       futureFundBalance += FUTURE_FUND;
+
+       balanceOf[address(this)] -= RESERVOIR_INITIAL;
+       reservoir += RESERVOIR_INITIAL;
+
+       balanceOf[address(this)] -= RESERVOIR_INITIAL;
+       emergencyReservoir1 += RESERVOIR_INITIAL;
+
+       balanceOf[address(this)] -= RESERVOIR_INITIAL;
+       emergencyReservoir2 += RESERVOIR_INITIAL;
        // balanceOf[address(this)] -= FUTURE_FUND;
        // balanceOf[address(this)] -= RESERVOIR_INITIAL * 3; // Main reservoir and two emergency reservoirs
    }  
