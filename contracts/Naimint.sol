@@ -124,12 +124,16 @@ contract Naimint {
                 distributeRewards(i); //iterate over the collection of links and where the votes are in excess of the average, distribute rewards to submitter and voters alike.
             }
         }
-        emit EpochEnded(currentEpoch);
+        
         // Reset for next epoch
         totalLinks = 0;
         totalVotes = 0;
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 4 days;
+        currentEpoch++;
+
+        //best practices: follow "checks-effects-interactions" 
+        emit EpochEnded(--currentEpoch);
     }
 
     
