@@ -6,8 +6,10 @@ import "./LibDiamond.sol";
 contract EpochFacet {
     event EpochStarted(uint256 indexed epochId, uint256 startTime);
     event EpochEnded(uint256 indexed epochId, uint256 endTime, address indexed triggeredBy);
-    event RewardDistributed(uint256 indexed submissionId, uint256 rewardAmount);
-    event RewardsDistributed(uint256 epochId, uint256 totalRewards);
+
+    event RewardMinted(address indexed creator, uint256 amount); //someone got a reward slice.
+    event RepaymentMinted(address indexed voter, uint256 amount); //someone got their voting charge back.
+    event RewardsDistributed(uint256 indexed epochId, uint256 totalRewards); //everyone got paid out for the epoch.
 
     /* reward distributed = sent $NAIM to addr.
        rewards distributed = for given epoch, total rewards were: such and such.*/
@@ -61,14 +63,14 @@ contract EpochFacet {
     //maybe not do in for loop ?  consider gas for for loop below or function call above
     //benefit to function call is can emit on ecah one ?  i guess we can emit below but starts to get messy
 
-    function distributeRewards() external {
-        require(block.timestamp >= epochEndTime, "EpochFacet: Epoch not ended yet");
-
+    function distributeRewards() internal {
+        LibDiamond.DiamondStorage storage ds = LibDiamond.diamondStorage();
+        require(block.timestamp >= ds.epochEndTime, "EpochFacet: Epoch not ended yet");
+        
+        uint256 totalRewards = 121.68 ether; // Fixed reward amount for each epoch
         uint256 totalSubmissions = linkSubmissionFacet.getLinkSubmissionCount();
         uint256 totalVotes = votingFacet.getTotalVoteCount();
         uint256 averageVotes = totalVotes / totalSubmissions;
-        uint256 totalRewards = 121.68 ether; // Fixed reward amount for each epoch
-        //need to still add the mulitplyer for when reservoir amount exceeding target
 
         uint256 eligibleSubmissions = 0;
         for (uint256 i = 0; i < totalSubmissions; i++) {
@@ -88,16 +90,26 @@ contract EpochFacet {
 
             if (submissionVotes > averageVotes) {
                 tokenFacet.mint(submission.creator, rewardPerSubmission);
+                emit RewardMinted(submission.creator, rewardPerSubmission);
+
+                // Repay users who upvoted the top 50% content
+                address[] memory voters = votingFacet.getVoters(submission.id);
+                uint256 voterCount = voters.length;
+                uint256 repaymentAmount = 0.01 ether; // Repayment amount per voter
+
+                for (uint256 j = 0; j < voterCount; j++) {
+                    tokenFacet.mint(voters[j], repaymentAmount);
+                    emit RepaymentMinted(voters[j], repaymentAmount);
+                }
             }
         }
 
-        reservoirFacet.updateReservoir(totalRewards);
-
+        reservoirFacet.deductReservoirBalance(totalRewards); //this will call updateReservoirBalance in the ReservoirFacet and lower the water-level accordingly.
         epochId++;
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 44 minutes;
 
-        emit RewardsDistributed(epochId - 1, totalRewards);
+        emit RewardsDistributed(--epochId, totalRewards); //minus minus epochId because VSP is l33th4x0r (= epochId - 1)
     }
 
     function endEpoch() internal {

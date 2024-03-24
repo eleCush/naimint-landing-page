@@ -20,8 +20,11 @@ pragma solidity ^0.8.0;
     }
 
     struct DiamondStorage {
+        //to ensure only the epochFacet may call sensitive diamond functions that alter reservoir level, and so forth.
+        address epochFacet;
         // Reservoir-related storage.
         uint256 reservoirBalance;
+        uint256 targetBalance; //target reservoir balance, get/setTargetBalance, reservoir will have a Spillover Multiplyer effect for payouts at the end of each Epoch, when the balance exceeds the target 
         //  Admin may trigger a complete one-way depletion of one of the emergency reservoirs into the main reservoir.  This is for unforseen economic downturns, internet outages, divine and or government intervetion that prevents chain synchronization for a while, and other things that might inadvertently drain the reservoir and render the token valueless.  For only extreme extreme and extreme extreme extreme emergencies.
         uint256 emergencyReservoir1Balance;
         uint256 emergencyReservoir2Balance;
@@ -41,8 +44,6 @@ pragma solidity ^0.8.0;
 
 
         /*VSP audited above this line x333xx3 */
-
-
 
 
 
@@ -67,6 +68,10 @@ pragma solidity ^0.8.0;
         assembly {
             ds.slot := 0
         }
+    }
+    
+    function enforceIsContractOwner() internal view {
+        require(msg.sender == diamondStorage().contractOwner, "LibDiamond: Caller is not the contract owner");
     }
 }
 
