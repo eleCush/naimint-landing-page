@@ -92,7 +92,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     }
 
     function submitLink(string calldata title, string calldata uri) external payable {
-        uint256 submissionFee = 0.000003 ether;
+        uint256 submissionFee = 0.00003 ether;
         require(msg.value >= submissionFee, "Insufficient balance for submission fee");
         reservoir += submissionFee;
         uint256 linkId = totalLinks++;
@@ -103,7 +103,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     }
 
     function upvoteLink(uint256 linkId) external payable{
-        uint256 votingFee = 0.000001 ether;
+        uint256 votingFee = 0.00001 ether;
         require(msg.value >= votingFee, "Insufficient balance for voting fee");
         reservoir += votingFee;
         linkVotes[linkId]++;
@@ -152,7 +152,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
             // Repay users who upvoted the link
             address[] memory voters = linkVoters[linkId];
             uint256 voterCount = voters.length;
-            uint256 repaymentAmount = 0.000001 ether; // Repayment amount per voter
+            uint256 repaymentAmount = 0.00001 ether; // Repayment amount per voter
             for (uint256 i = 0; i < voterCount; i++) {
                 _transfer(address(this), voters[i], repaymentAmount);
                 totalPaidOutThisEpoch += repaymentAmount;
@@ -225,6 +225,10 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     function decimals() public view virtual override returns (uint8) {
         return _decimals;
     }
+
+    //to add: + emergency reservoir operations when hitting bottom: 5,555
+    //        + payout multiplyer for over 22,222 stable level
+    //        + founder's fund 
     
 
     //constructor
