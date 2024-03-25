@@ -152,7 +152,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
             // Repay users who upvoted the link
             address[] memory voters = linkVoters[linkId];
             uint256 voterCount = voters.length;
-            uint256 repaymentAmount = 0.01 ether; // Repayment amount per voter
+            uint256 repaymentAmount = 0.000001 ether; // Repayment amount per voter
             for (uint256 i = 0; i < voterCount; i++) {
                 _transfer(address(this), voters[i], repaymentAmount);
                 totalPaidOutThisEpoch += repaymentAmount;
