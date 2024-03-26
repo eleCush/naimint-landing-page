@@ -137,8 +137,16 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         // Calculate the founder's fund payout based on pay-ins
         uint256 foundersPayout = (payIns * FOUNDERS_FUND_PERCENTAGE) / 1000;
         foundersFund += foundersPayout; //adjust the foundersFund balance (discretionary fund)
+        //amounts coming from PayIns are not considered part of TotalPaidOut, instead it's more like imperial tax on commerce coming in.  anything coming _out_ of the res is part of totalPaidOut and is for depletion calculation.  payIns does not deplete res when subtracting therefrom, therefore, do not add founderPayout to totalPaidOut this epoch.
         reservoir += (payIns - foundersFund); //encrease the reservoir amount by the remaining amount of payIns 
         payIns = 0; // Reset pay-ins for the next epoch
+
+       //maybe rewrite this as a method "deplete(payIns).by.foundersPayout.replete.foundersFund.by.same"
+       //internal_transfer(source, destination, amount)
+       //internal_transfer(payIns, foundersFund, foundersPayout);
+       //internal_transfer(payIns, reservoir, payIns);; //is the amount remaining after top move
+       //audit # of changes to payIns, reservoir, foundersFund
+       //not sure if this would add ease of auditing, enjoy how it is
 
         // Check if the link has above-average votes
         if (linkVotes[linkId] > averageVotes) {
@@ -149,6 +157,10 @@ contract Naimint is Context, IERC20, IERC20Metadata {
                     eligibleSubmissions++;
                 }
             }
+
+             //need to check for eligibleSubmissions being > 0
+             //otherwise, payOut is zero for the epoch (which leaves reservoir rising for multiplicative results next overflow epoch)
+
             // Apply payout multiplier based on reservoir level
             uint256    payoutMultiplier = calculatePayoutMultiplier();
                            totalRewards = (totalRewards * payoutMultiplier) / 100;
@@ -197,6 +209,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         // Reset for next epoch
         totalLinks = 0;
         totalVotes = 0;
+        payIns = 0;
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 1 minutes;
         currentEpoch++;
@@ -255,18 +268,19 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     //constructor
     constructor() {
         epochStartTime = block.timestamp;
-        epochEndTime = epochStartTime + 1 minutes;
+        epochEndTime   = epochStartTime + 1 minutes;
         founderAddress = 0xB8C57853bDFD5008315eb1bB5dB337F7EECB09D8;
         mint(address(this), TOTAL_SUPPLY);
 
         // Allocate funds to ICO, Future Fund, and reservoirs
-        icoFundBalance = ICO_FUND;               //33333
-        futureFundBalance = FUTURE_FUND;         //22222
-        foundersFund = 0;
-        reservoir = RESERVOIR_INITIAL;           //11111
+        foundersFund        = 0;
+        icoFundBalance      = ICO_FUND;          //33333
+        futureFundBalance   = FUTURE_FUND;       //22222
+        reservoir           = RESERVOIR_INITIAL; //11111
         emergencyReservoir1 = RESERVOIR_INITIAL; //11111
         emergencyReservoir2 = RESERVOIR_INITIAL; //11111
                                                  //total supply: an immutable 88888
+
     }
    //enjoy keepin' constructor @ bottom.
 }
