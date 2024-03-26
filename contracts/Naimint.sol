@@ -17,13 +17,14 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     uint256 public constant RESERVOIR_EMERGENCY_THRESHOLD_2 = 3333 * 10**18;
 
     // each emergency reservoir also starts with 11111 * 10**18, assigned in Constructor{} at bottom;
-    uint256 public reservoir = 0; //RESERVOIR_INITIAL;
-    uint256 public icoFundBalance = 0;
-    uint256 public futureFundBalance = 0;
-    uint256 public emergencyReservoir1 = 0; //RESERVOIR_INITIAL;
-    uint256 public emergencyReservoir2 = 0; // RESERVOIR_INITIAL;
-    uint256 public foundersFund;
-    uint256 public payIns;
+    uint256 public reservoir; //RESERVOIR_INITIAL;
+    uint256 public icoFundBalance; //set in constructor
+    uint256 public futureFundBalance; //set in constructor
+    uint256 public emergencyReservoir1; //RESERVOIR_INITIAL;
+    uint256 public emergencyReservoir2; // RESERVOIR_INITIAL;
+    uint256 public foundersFund; //2.5% discretionary to founder
+    uint256 public payIns; //to track votingFee & submissionFee total for each epoch, for founderFund calculation
+    address public founderAddress;
     
     mapping(uint256 => string) public linkTitles; // LinkID => Title
     mapping(uint256 => string) public linkURIs; // LinkID => URI
@@ -42,6 +43,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     event EpochEnded(uint256 indexed epochId);
     event RewardMinted(address indexed creator, uint256 amount);
     event RepaymentMinted(address indexed voter, uint256 amount);
+    event FounderWithdrewFromFounderFund(address indexed founder, uint256 amount);
 
     string public constant _name = "Naimint Token";
     string public constant _symbol = "NAIM";
@@ -59,7 +61,6 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     function balanceOf(address account) public view virtual override returns (uint256) {
         return _balances[account];
     }
-
 
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
@@ -230,6 +231,16 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
+
+   function withdrawFromFoundersFund(uint256 amount) public {
+    require(msg.sender == founderAddress, "Only the founder can withdraw from the founders fund");
+    require(amount <= foundersFund, "Cannot withdraw more than the available fund balance");
+    // Adjust the foundersFund balance
+    foundersFund -= amount;
+    // Transfer the specified amount to the founder
+    _transfer(address(this), founderAddress, amount);
+    emit FounderWithdrewFromFounderFund(founderAddress, amount);
+   }
     
     function name() public view virtual override returns (string memory) {
         return _name;
@@ -247,6 +258,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     constructor() {
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 1 minutes;
+        founderAddress = "0xB8C57853bDFD5008315eb1bB5dB337F7EECB09D8";
         mint(address(this), TOTAL_SUPPLY);
 
         // Allocate funds to ICO, Future Fund, and reservoirs
