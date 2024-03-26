@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+//MIT & Vincent S. Pulling 25 March 2024 https://naimint.com
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -7,56 +7,51 @@ import "@openzeppelin/contracts/utils/Context.sol";
 
 contract Naimint is Context, IERC20, IERC20Metadata {
 
-
     uint256 public constant TOTAL_SUPPLY = 88888 * 10**18;
     uint256 public constant RESERVOIR_INITIAL = 11111 * 10**18;
     uint256 public constant ICO_FUND = 33333 * 10**18;
     uint256 public constant FUTURE_FUND = 22222 * 10**18;
-    // Assuming each emergency reservoir also starts with 11111 * 10**18;
+    uint256 public constant FOUNDERS_FUND_PERCENTAGE = 25; // 2.5% as a percentage
+    uint256 public constant RESERVOIR_TARGET = 22222 * 10**18;
+    uint256 public constant RESERVOIR_EMERGENCY_THRESHOLD_1 = 5555 * 10**18;
+    uint256 public constant RESERVOIR_EMERGENCY_THRESHOLD_2 = 3333 * 10**18;
+
+    // each emergency reservoir also starts with 11111 * 10**18, assigned in Constructor{} at bottom;
     uint256 public reservoir = 0; //RESERVOIR_INITIAL;
     uint256 public icoFundBalance = 0;
     uint256 public futureFundBalance = 0;
-
     uint256 public emergencyReservoir1 = 0; //RESERVOIR_INITIAL;
     uint256 public emergencyReservoir2 = 0; // RESERVOIR_INITIAL;
-    // ICO and Future Fund balances can be tracked similarly if needed.
-
+    uint256 public foundersFund;
+    uint256 public payIns;
+    
     mapping(uint256 => string) public linkTitles; // LinkID => Title
     mapping(uint256 => string) public linkURIs; // LinkID => URI
     mapping(uint256 => uint256) public linkVotes; // LinkID => Vote Count
     mapping(uint256 => address[]) public linkVoters; // LinkID => Voters
-
     mapping(uint256 => address) public linkSubmitters; // LinkID => Submitter
 
     uint256 public totalLinks;
     uint256 public totalVotes;
-
     uint256 public epochStartTime;
-    uint256 public epochEndTime = block.timestamp + 1 minutes; // Adjust as needed
+    uint256 public epochEndTime = block.timestamp + 1 minutes; // Demonstration, actually set in the epoch initiation (startEpoch)
+    uint256 public currentEpoch;
 
     event LinkSubmitted(uint256 indexed linkId, string title, string uri, address submitter);
     event LinkUpvoted(uint256 indexed linkId, address voter);
     event EpochEnded(uint256 indexed epochId);
-    //event Transfer(address indexed from, address indexed to, uint256 value);
-    //event Approval(address indexed owner, address indexed spender, uint256 value);
     event RewardMinted(address indexed creator, uint256 amount);
     event RepaymentMinted(address indexed voter, uint256 amount);
 
-    // Token constants
     string public constant _name = "Naimint Token";
     string public constant _symbol = "NAIM";
     uint8 public constant _decimals = 18;
-
-
     uint256 private _totalSupply = TOTAL_SUPPLY;
-    
 
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
 
-
-
-    // Token state
+    //token state
     function totalSupply() public view virtual override returns (uint256) {
         return _totalSupply;
     }
@@ -64,7 +59,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     function balanceOf(address account) public view virtual override returns (uint256) {
         return _balances[account];
     }
-    uint256 public currentEpoch;
+
 
     function allowance(address owner, address spender) public view virtual override returns (uint256) {
         return _allowances[owner][spender];
@@ -83,7 +78,6 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         return true;
     }
 
-
     function mint(address account, uint256 amount) internal {
         require(account != address(0), "ERC20: mint to the zero address");
         _totalSupply += amount;
@@ -92,9 +86,10 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     }
 
     function submitLink(string calldata title, string calldata uri) external payable {
-        uint256 submissionFee = 0.00003 ether;
+        uint256 submissionFee = 0.000030 ether;
         require(msg.value >= submissionFee, "Insufficient balance for submission fee");
-        reservoir += submissionFee;
+        //reservoir += submissionFee;
+        payIns += submissionFee; // Track pay-ins
         uint256 linkId = totalLinks++;
         linkTitles[linkId] = title;
         linkURIs[linkId] = uri;
@@ -103,9 +98,10 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     }
 
     function upvoteLink(uint256 linkId) external payable{
-        uint256 votingFee = 0.00001 ether;
+        uint256 votingFee = 0.000010 ether;
         require(msg.value >= votingFee, "Insufficient balance for voting fee");
-        reservoir += votingFee;
+        //reservoir += votingFee;
+        payIns += submissionFee; // Track pay-ins
         linkVotes[linkId]++;
         linkVoters[linkId].push(msg.sender);
         totalVotes++;
@@ -121,7 +117,14 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         _transfer(_msgSender(), recipient, amount);
         return true;
     }
-
+    //used in the distributeRewards fn, we multiply the excess "spillover" reservoir percentage by 121.68 to enhance the payouts in a given-subsequent epoch
+    function calculatePayoutMultiplier() internal view returns (uint256) {
+        if (reservoir >= RESERVOIR_TARGET) {
+            uint256 excessPercentage = ((reservoir - RESERVOIR_TARGET) * 100) / RESERVOIR_TARGET;
+            return 100 + excessPercentage;
+        }
+        return 100;
+    }
     //distributes rewards for a specific linkId that was submitted.
     //the submitter gets an even slice of the 121.68 and 
     // each voter gets their vote cost back $0.01 NAIM.
@@ -132,6 +135,12 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         uint256 averageVotes = totalVotes / totalLinks;
         uint256 totalPaidOutThisEpoch = 0; //track ze mint
 
+        // Calculate the founder's fund payout based on pay-ins
+        uint256 foundersPayout = (payIns * FOUNDERS_FUND_PERCENTAGE) / 1000;
+        foundersFund += foundersPayout; //adjust the foundersFund balance (discretionary fund)
+        reservoir += (payIns - foundersFund); //encrease the reservoir amount by the remaining amount of payIns 
+        payIns = 0; // Reset pay-ins for the next epoch
+
         // Check if the link has above-average votes
         if (linkVotes[linkId] > averageVotes) {
             // Calculate the reward per eligible submission
@@ -141,6 +150,9 @@ contract Naimint is Context, IERC20, IERC20Metadata {
                     eligibleSubmissions++;
                 }
             }
+            // Apply payout multiplier based on reservoir level
+            uint256    payoutMultiplier = calculatePayoutMultiplier();
+                           totalRewards = (totalRewards * payoutMultiplier) / 100;
             uint256 rewardPerSubmission = totalRewards / eligibleSubmissions;
 
             // Mint reward tokens to the link submitter
@@ -152,7 +164,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
             // Repay users who upvoted the link
             address[] memory voters = linkVoters[linkId];
             uint256 voterCount = voters.length;
-            uint256 repaymentAmount = 0.00001 ether; // Repayment amount per voter
+            uint256 repaymentAmount = 0.000015 ether; // Repayment amount per voter should be a little more than cost to vote
             for (uint256 i = 0; i < voterCount; i++) {
                 _transfer(address(this), voters[i], repaymentAmount);
                 totalPaidOutThisEpoch += repaymentAmount;
@@ -164,7 +176,6 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         reservoir -= totalPaidOutThisEpoch; //remunerated votes + 121.68 payout minimum // will add multiplier to payout minimum when reservoir is over threshold, soon
     }
     
-
     function endEpoch() internal {
         uint256 averageVotes = totalVotes / totalLinks;
         for (uint256 i = 0; i < totalLinks; i++) {
@@ -172,6 +183,17 @@ contract Naimint is Context, IERC20, IERC20Metadata {
                 distributeRewards(i); //iterate over the collection of links and where the votes are in excess of the average, distribute rewards to submitter and voters alike.
             }
         }
+
+         // Check emergency reservoir conditions: 5555 to trigger first release, 3333 to trigger second and final release
+         if (reservoir <= RESERVOIR_EMERGENCY_THRESHOLD_1 && emergencyReservoir1 > 0) {
+             uint256 depletionAmount = emergencyReservoir1;
+                 emergencyReservoir1 = 0;
+                          reservoir += depletionAmount;
+         } else if (reservoir <= RESERVOIR_EMERGENCY_THRESHOLD_2 && emergencyReservoir2 > 0) {
+             uint256 depletionAmount = emergencyReservoir2;
+                 emergencyReservoir2 = 0;
+                          reservoir += depletionAmount;
+         }
         
         // Reset for next epoch
         totalLinks = 0;
@@ -183,11 +205,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         //best practices: follow "checks-effects-interactions" 
         emit EpochEnded(--currentEpoch);
     }
-
-
-
-   //mint, transfer, approve internal
-
+    
     // Internal functions to implement minting and transferring
     function _mint(address account, uint256 amount) internal virtual {
         require(account != address(0), "ERC20: mint to the zero address");
@@ -212,7 +230,6 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         _allowances[owner][spender] = amount;
         emit Approval(owner, spender, amount);
     }
-
     
     function name() public view virtual override returns (string memory) {
         return _name;
@@ -226,24 +243,20 @@ contract Naimint is Context, IERC20, IERC20Metadata {
         return _decimals;
     }
 
-    //to add: + emergency reservoir operations when hitting bottom: 5,555
-    //        + payout multiplyer for over 22,222 stable level
-    //        + founder's fund 
-    
-
     //constructor
-
     constructor() {
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 1 minutes;
         mint(address(this), TOTAL_SUPPLY);
 
         // Allocate funds to ICO, Future Fund, and reservoirs
-        icoFundBalance = ICO_FUND;
-        futureFundBalance = FUTURE_FUND;
-        reservoir = RESERVOIR_INITIAL;
-        emergencyReservoir1 = RESERVOIR_INITIAL;
-        emergencyReservoir2 = RESERVOIR_INITIAL;
+        icoFundBalance = ICO_FUND;               //33333
+        futureFundBalance = FUTURE_FUND;         //22222
+        foundersFund = 0;
+        reservoir = RESERVOIR_INITIAL;           //11111
+        emergencyReservoir1 = RESERVOIR_INITIAL; //11111
+        emergencyReservoir2 = RESERVOIR_INITIAL; //11111
+                                                 //total supply: an immutable 88888
     }
    //enjoy keepin' constructor @ bottom.
 }
