@@ -256,7 +256,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     constructor() {
         epochStartTime = block.timestamp;
         epochEndTime = epochStartTime + 1 minutes;
-        founderAddress = "0xB8C57853bDFD5008315eb1bB5dB337F7EECB09D8";
+        founderAddress = 0xB8C57853bDFD5008315eb1bB5dB337F7EECB09D8;
         mint(address(this), TOTAL_SUPPLY);
 
         // Allocate funds to ICO, Future Fund, and reservoirs
