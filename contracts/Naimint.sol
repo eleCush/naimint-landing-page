@@ -89,8 +89,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     function submitLink(string calldata title, string calldata uri) external payable {
         uint256 submissionFee = 0.000030 ether;
         require(msg.value >= submissionFee, "Insufficient balance for submission fee");
-        //reservoir += submissionFee;
-        payIns += submissionFee; // Track pay-ins
+        payIns += submissionFee; // Track pay-ins, added to res at end of epoch during distributeRewards
         uint256 linkId = totalLinks++;
         linkTitles[linkId] = title;
         linkURIs[linkId] = uri;
@@ -101,8 +100,7 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     function upvoteLink(uint256 linkId) external payable{
         uint256 votingFee = 0.000010 ether;
         require(msg.value >= votingFee, "Insufficient balance for voting fee");
-        //reservoir += votingFee;
-        payIns += submissionFee; // Track pay-ins
+        payIns += votingFee; // Track pay-ins, added to res at end of epoch during distributeRewards
         linkVotes[linkId]++;
         linkVoters[linkId].push(msg.sender);
         totalVotes++;
