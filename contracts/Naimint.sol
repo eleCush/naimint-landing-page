@@ -1,4 +1,5 @@
-//MIT & Vincent S. Pulling 25 March 2024 https://naimint.com
+//Vincent S. Pulling 26 March 2024 https://naimint.com
+//SPDX-License-Identifier:MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -252,6 +253,55 @@ contract Naimint is Context, IERC20, IERC20Metadata {
     _transfer(address(this), founderAddress, amount);
     emit FounderWithdrewFromFounderFund(founderAddress, amount);
    }
+
+   //PBS is your public broadcasting station
+   //but due to budget cuts we now mostly exist
+   //in this ethereum contract as the following methods
+   // Function to get a link's title by its ID
+    function getLinkTitleById(uint256 linkId) external view returns (string memory) {
+        require(linkId < totalLinks, "Invalid link ID");
+        return linkTitles[linkId];
+    }
+
+    // Function to get a link's URI by its ID
+    function getLinkUriById(uint256 linkId) external view returns (string memory) {
+        require(linkId < totalLinks, "Invalid link ID");
+        return linkURIs[linkId];
+    }
+
+    // Function to get a link's votes by its ID
+    function getLinkVotesById(uint256 linkId) external view returns (uint256) {
+        require(linkId < totalLinks, "Invalid link ID");
+        return linkVotes[linkId];
+    }
+
+    // Function to view all link submissions
+    function getAllLinkSubmissions() external view returns (uint256[] memory, string[] memory, string[] memory) {
+        uint256[] memory ids = new uint256[](totalLinks);
+        string[] memory titles = new string[](totalLinks);
+        string[] memory uris = new string[](totalLinks);
+
+        for (uint256 i = 0; i < totalLinks; i++) {
+            ids[i] = i;
+            titles[i] = linkTitles[i];
+            uris[i] = linkURIs[i];
+        }
+
+        return (ids, titles, uris);
+    }
+
+    // Function to view all link vote counts
+    function getAllLinkVoteCounts() external view returns (uint256[] memory, uint256[] memory) {
+        uint256[] memory ids = new uint256[](totalLinks);
+        uint256[] memory votes = new uint256[](totalLinks);
+
+        for (uint256 i = 0; i < totalLinks; i++) {
+            ids[i] = i;
+            votes[i] = linkVotes[i];
+        }
+
+        return (ids, votes);
+    }
     
     function name() public view virtual override returns (string memory) {
         return _name;
